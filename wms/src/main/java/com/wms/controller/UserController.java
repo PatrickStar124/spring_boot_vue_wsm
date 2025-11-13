@@ -2,12 +2,14 @@ package com.wms.controller;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.wms.common.QueryPageParam;
 import com.wms.entity.User;
 import com.wms.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -50,10 +52,17 @@ public class UserController {
         return userService.removeById(id);
     }
     //查询（模糊、匹配）注释
-    @PostMapping("/listP")
-    public List<User> listP(@RequestBody User user){
-        LambdaQueryWrapper<User> LambdaQueryWrapper = new LambdaQueryWrapper<>();
-        LambdaQueryWrapper.like(User::getName,user.getName());
-        return  userService.list(LambdaQueryWrapper);
+    @PostMapping("/listPage")
+//    public List<User> listPage(@RequestBody HashMap map){
+    public List<User> listPage(@RequestBody QueryPageParam query){
+        System.out.println(query);
+
+
+        System.out.println("num==="+query.getPageNum());
+        System.out.println("size==="+query.getPageSize());
+//        LambdaQueryWrapper<User> LambdaQueryWrapper = new LambdaQueryWrapper<>();
+//        LambdaQueryWrapper.like(User::getName,user.getName());
+//        return  userService.list(LambdaQueryWrapper);
+        return null;
     }
 }
