@@ -2,6 +2,8 @@ package com.wms.controller;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.wms.common.QueryPageParam;
 import com.wms.entity.User;
 import com.wms.service.UserService;
@@ -60,9 +62,52 @@ public class UserController {
 
         System.out.println("num==="+query.getPageNum());
         System.out.println("size==="+query.getPageSize());
+
+        HashMap param =query.getParam();
+        String name = (String)param.get("name");
+        System.out.println("name==="+(String)param.get("name") );
+//        System.out.println("no==="+(String)param.get("no") );
 //        LambdaQueryWrapper<User> LambdaQueryWrapper = new LambdaQueryWrapper<>();
 //        LambdaQueryWrapper.like(User::getName,user.getName());
 //        return  userService.list(LambdaQueryWrapper);
-        return null;
+        Page<User> page = new Page<User>();
+        page.setCurrent(query.getPageNum());
+        page.setSize(query.getPageSize());
+
+        LambdaQueryWrapper<User> LambdaQueryWrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper.like(User::getName,name);
+
+        IPage result= userService.page(page,LambdaQueryWrapper);
+        System.out.println("total=="+result.getTotal() );
+
+
+        return result.getRecords();
+    }
+    @PostMapping("/listPageC")
+//    public List<User> listPage(@RequestBody HashMap map){
+    public List<User> listPageC(@RequestBody QueryPageParam query){
+        System.out.println(query);
+
+
+        System.out.println("num==="+query.getPageNum());
+        System.out.println("size==="+query.getPageSize());
+
+        HashMap param =query.getParam();
+        String name = (String)param.get("name");
+        System.out.println("name==="+(String)param.get("name") );
+
+        Page<User> page = new Page<User>();
+        page.setCurrent(query.getPageNum());
+        page.setSize(query.getPageSize());
+
+        LambdaQueryWrapper<User> LambdaQueryWrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper.like(User::getName,name);
+
+//        IPage result= userService.pageC(page);
+        IPage result= userService.pageCC(page,LambdaQueryWrapper);
+        System.out.println("total=="+result.getTotal() );
+
+
+        return result.getRecords();
     }
 }
