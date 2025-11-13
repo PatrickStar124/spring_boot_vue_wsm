@@ -1,6 +1,7 @@
 package com.wms.controller;
 
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.wms.entity.User;
 import com.wms.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,5 +50,10 @@ public class UserController {
         return userService.removeById(id);
     }
     //查询（模糊、匹配）注释
-
+    @PostMapping("/listP")
+    public List<User> listP(@RequestBody User user){
+        LambdaQueryWrapper<User> LambdaQueryWrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper.like(User::getName,user.getName());
+        return  userService.list(LambdaQueryWrapper);
+    }
 }
