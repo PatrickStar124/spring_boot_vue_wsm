@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.wms.common.QueryPageParam;
+import com.wms.common.Result;
 import com.wms.entity.User;
 import com.wms.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,9 +84,9 @@ public class UserController {
 
         return result.getRecords();
     }
-    @PostMapping("/listPageC")
+    @PostMapping("/listPageC1")
 //    public List<User> listPage(@RequestBody HashMap map){
-    public List<User> listPageC(@RequestBody QueryPageParam query){
+    public Result listPageC1(@RequestBody QueryPageParam query){
         System.out.println(query);
 
 
@@ -108,6 +109,6 @@ public class UserController {
         System.out.println("total=="+result.getTotal() );
 
 
-        return result.getRecords();
+        return Result.suc(result.getRecords(),result.getTotal());
     }
 }
