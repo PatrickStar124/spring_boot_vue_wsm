@@ -54,7 +54,7 @@ public class UserController {
     public boolean delete(Integer id){
         return userService.removeById(id);
     }
-    //查询（模糊、匹配）注释
+    //查询（模糊、匹配）
     @PostMapping("/listPage")
 //    public List<User> listPage(@RequestBody HashMap map){
     public List<User> listPage(@RequestBody QueryPageParam query){
