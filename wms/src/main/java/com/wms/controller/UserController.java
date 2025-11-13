@@ -4,10 +4,7 @@ package com.wms.controller;
 import com.wms.entity.User;
 import com.wms.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,9 +29,25 @@ public class UserController {
     }
 
     //新增
+    @PostMapping("/save")
+    public boolean save(@RequestBody User user){
+        return  userService.save(user);
+    }
     //修改
+    @PostMapping("/mod")
+    public boolean mod(@RequestBody User user){
+        return  userService.updateById(user);
+    }
     //新增或修改
+    @PostMapping("/saveOrMod")
+    public boolean saveOrMod(@RequestBody User user){
+        return  userService.saveOrUpdate(user);
+    }
     //删除
-    //查询（模糊、匹配）
+    @GetMapping("/delete")
+    public boolean delete(Integer id){
+        return userService.removeById(id);
+    }
+    //查询（模糊、匹配）注释
 
 }
