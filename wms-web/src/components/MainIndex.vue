@@ -22,7 +22,7 @@ import MainHeader from "@/components/MainHeader.vue";
 import AppMain from "@/components/AppMain.vue";
 
 export default {
-  name:"IndexView",
+  name:"MainIndex",
   components: {AppMain, MainHeader, MainAside},
 
 }

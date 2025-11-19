@@ -1,17 +1,17 @@
 <template>
   <div id="app">
-    <IndexView></IndexView>
+    <MainIndex></MainIndex>
   </div>
 </template>
 
 <script>
 
-import IndexView from "./components/IndexView.vue";
+import MainIndex from "./components/MainIndex.vue";
 
 export default {
   name: 'App',
   components: {
-      IndexView: IndexView
+      MainIndex: MainIndex
   }
 }
 </script>
