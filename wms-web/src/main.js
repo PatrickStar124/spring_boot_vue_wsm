@@ -10,7 +10,7 @@ import router from './router'
 // axios 配置
 import axios from "axios";
 
-// 创建 app 实例1
+// 创建 app 实例
 const app = createApp(App)
 
 // 配置全局变量
