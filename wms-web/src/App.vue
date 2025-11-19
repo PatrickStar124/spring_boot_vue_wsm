@@ -1,16 +1,23 @@
 <template>
   <div id="app">
-    <MainIndex></MainIndex> <!-- 组件名同步修改 -->
+    <IndexView></IndexView>
   </div>
 </template>
 
 <script>
-import MainIndex from "@/components/MainIndex.vue"; // 路径和组件名同步修改
+
+import IndexView from "./components/IndexView.vue";
 
 export default {
   name: 'App',
   components: {
-    MainIndex // 注册名同步修改
+      IndexView: IndexView
   }
-};
+}
 </script>
+
+<style>
+#app {
+     height: 100%;
+}
+</style>
