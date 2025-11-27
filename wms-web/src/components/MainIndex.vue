@@ -1,11 +1,11 @@
 <template>
   <el-container style="height:100%; border: 1px solid #eee">
-    <el-aside width="200px" style="background-color: rgb(238, 241, 246);height:100%;">
+    <el-aside width="200px" style="background-color: rgb(238, 241, 246);height:100vh;">
       <MainAside></MainAside>
     </el-aside>
 
     <el-container style="height:100%;">
-      <el-header style="text-align: right; font-size: 12px;height: 100%;">
+      <el-header style="text-align: right; font-size: 12px;height: 100%;border-bottom: rgba(169,169,169,0.3) 1px solid">
          <MainHeader></MainHeader>
       </el-header>
 
@@ -30,7 +30,7 @@ export default {
 
 <style scoped>
   .el-header {
-    background-color: #B3C0D1;
+    #background-color: #B3C0D1;
     color: #333;
     line-height: 60px;
   }
