@@ -4,13 +4,12 @@
       <div class="login-content">
         <h1 class="login-title">用户登录</h1>
         <el-form :model="loginForm" label-width="100px"
-                 :rules="rules" ref="loginForm">
+                 :rules="rules" ref="loginFormRef">
           <el-form-item label="账号" prop="no">
             <el-input style="width: 200px" type="text" v-model="loginForm.no"
                       autocomplete="off" size="small"></el-input>
           </el-form-item>
           <el-form-item label="密码" prop="password">
-            <!-- 移除 .native 修饰符 -->
             <el-input style="width: 200px" type="password" v-model="loginForm.password"
                       show-password autocomplete="off" size="small" @keyup.enter="confirm"></el-input>
           </el-form-item>
@@ -23,62 +22,75 @@
   </div>
 </template>
 
-
 <script>
+import { ref, reactive, getCurrentInstance } from 'vue'
+import { useRouter } from 'vue-router'
+import { useStore } from 'vuex'
+import { ElMessage } from 'element-plus'
+
 export default {
-  name: "LoginForm", // 组件名改为多单词 LoginForm
-  data(){
-    return{
-      confirm_disabled:false,
-      loginForm:{
-        no:'',
-        password:''
-      },
-      rules:{
-        no: [
-          { required: true, message: '请输入账号', trigger: 'blur' }
-        ],
-        password: [
-          { required: true, message: '请输密码', trigger: 'blur' }
-        ],
-      }
-    }
-  },
-  methods:{
-    confirm(){
-      this.confirm_disabled=true;
-      this.$refs.loginForm.validate((valid) => {
-        if (valid) {
-          // 调用登录接口（注意：Vue 3 中全局变量通过 app.config.globalProperties 定义，需确保已正确配置 $axios 和 $httpUrl）
-          this.$axios.post(this.$httpUrl+'/user/login', this.loginForm)
-              .then(res => res.data)
-              .then(res => {
-                console.log(res);
-                if(res.code === 200){
-                  // 存储用户信息
-                  sessionStorage.setItem("CurUser", JSON.stringify(res.data.user));
-                  console.log(res.data.menu);
-                  this.$store.commit("setMenu", res.data.menu);
-                  // 跳转到主页（确保路由中已定义 '/Index' 路径）
-                  this.$router.replace('/Index');
-                } else {
-                  this.confirm_disabled = false;
-                  alert('校验失败，用户名或密码错误！');
-                  return false;
-                }
-              })
-              .catch(error => {
-                // 捕获请求异常（如网络错误）
-                this.confirm_disabled = false;
-                console.error('登录请求失败：', error);
-                alert('登录失败，请稍后重试');
-              });
+  name: "LoginForm",
+  setup() {
+    const { proxy } = getCurrentInstance()
+    const router = useRouter()
+    const store = useStore()
+
+    const confirm_disabled = ref(false)
+    const loginFormRef = ref()
+
+    const loginForm = reactive({
+      no: '',
+      password: ''
+    })
+
+    const rules = reactive({
+      no: [
+        { required: true, message: '请输入账号', trigger: 'blur' }
+      ],
+      password: [
+        { required: true, message: '请输密码', trigger: 'blur' }
+      ]
+    })
+
+    const confirm = () => {
+      confirm_disabled.value = true
+      loginFormRef.value.validate((valid) => {
+        if (valid) { // valid成功为true，失败为false
+          // 去后台验证用户名密码
+          proxy.$axios.post(proxy.$httpUrl + '/user/login', loginForm).then(res => res.data).then(res => {
+            console.log(res)
+            if (res.code == 200) {
+              // 存储
+              sessionStorage.setItem("CurUser", JSON.stringify(res.data.user))
+
+              console.log(res.data.menu)
+              store.commit("setMenu", res.data.menu)
+              // 跳转到主页
+              router.replace('/Index')
+            } else {
+              confirm_disabled.value = false
+              ElMessage.error('校验失败，用户名或密码错误！')
+              return false
+            }
+          }).catch(error => {
+            confirm_disabled.value = false
+            ElMessage.error('登录请求失败，请检查网络连接')
+            console.error('登录请求失败:', error)
+          })
         } else {
-          this.confirm_disabled = false;
-          console.log('校验失败');
-          return false;
+          confirm_disabled.value = false
+          console.log('校验失败')
+          return false
         }
-      });
+      })
+    }
+
+    return {
+      confirm_disabled,
+      loginForm,
+      rules,
+      loginFormRef,
+      confirm
     }
   }
 }
