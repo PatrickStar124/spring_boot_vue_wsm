@@ -25,7 +25,6 @@
 <script>
 import { ref, reactive, getCurrentInstance } from 'vue'
 import { useRouter } from 'vue-router'
-import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
 
 export default {
@@ -33,7 +32,6 @@ export default {
   setup() {
     const { proxy } = getCurrentInstance()
     const router = useRouter()
-    const store = useStore()
 
     const confirm_disabled = ref(false)
     const loginFormRef = ref()
@@ -48,39 +46,38 @@ export default {
         { required: true, message: '请输入账号', trigger: 'blur' }
       ],
       password: [
-        { required: true, message: '请输密码', trigger: 'blur' }
+        { required: true, message: '请输入密码', trigger: 'blur' }
       ]
     })
 
     const confirm = () => {
       confirm_disabled.value = true
       loginFormRef.value.validate((valid) => {
-        if (valid) { // valid成功为true，失败为false
-          // 去后台验证用户名密码
-          proxy.$axios.post(proxy.$httpUrl + '/user/login', loginForm).then(res => res.data).then(res => {
-            console.log(res)
-            if (res.code == 200) {
-              // 存储
-              sessionStorage.setItem("CurUser", JSON.stringify(res.data.user))
-
-              console.log(res.data.menu)
-              store.commit("setMenu", res.data.menu)
-              // 跳转到主页
-              router.replace('/Index')
-            } else {
-              confirm_disabled.value = false
-              ElMessage.error('校验失败，用户名或密码错误！')
-              return false
-            }
-          }).catch(error => {
-            confirm_disabled.value = false
-            ElMessage.error('登录请求失败，请检查网络连接')
-            console.error('登录请求失败:', error)
-          })
+        if (valid) {
+          // 调用后端登录接口（使用全局注册的axios和基础地址）
+          proxy.$axios.post(proxy.$httpUrl + '/user/login', loginForm)
+              .then(res => res.data)
+              .then(res => {
+                console.log("后端返回数据：", res)
+                if (res.code === 200) {
+                  // 存储用户信息到本地会话
+                  sessionStorage.setItem("CurUser", JSON.stringify(res.data))
+                  // 跳转到主页（路由地址与你的配置一致）
+                  router.replace('/Index')
+                  ElMessage.success('登录成功！')
+                } else {
+                  confirm_disabled.value = false
+                  ElMessage.error('用户名或密码错误！')
+                }
+              })
+              .catch(error => {
+                confirm_disabled.value = false
+                ElMessage.error('登录失败：' + error.message)
+                console.error('登录请求异常：', error)
+              })
         } else {
           confirm_disabled.value = false
-          console.log('校验失败')
-          return false
+          ElMessage.warning('请填写完整账号密码！')
         }
       })
     }
