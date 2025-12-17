@@ -31,27 +31,37 @@
 </template>
 
 <script>
-export default {
+import { defineComponent } from 'vue'
+
+export default defineComponent({
   name: 'HelloWorld',
   props: {
     msg: String
   }
-}
+})
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only 1-->
+<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.hello {
+  text-align: center;
+  margin: 60px 0;
+}
+
 h3 {
   margin: 40px 0 0;
 }
+
 ul {
   list-style-type: none;
   padding: 0;
 }
+
 li {
   display: inline-block;
   margin: 0 10px;
 }
+
 a {
   color: #42b983;
 }
