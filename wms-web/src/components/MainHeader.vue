@@ -7,7 +7,7 @@
     </div>
 
     <div class="center-section">
-      <span class="title">欢迎来到仓库管理系统</span>
+      <span class="title">图书管理系统</span>
     </div>
 
     <div class="right-section">

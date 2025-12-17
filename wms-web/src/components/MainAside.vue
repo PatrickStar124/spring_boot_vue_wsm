@@ -14,80 +14,47 @@
       <span>首页</span>
     </el-menu-item>
 
-    <el-menu-item
-        :index="'/' + item.menuclick"
-        v-for="(item, i) in menu"
-        :key="i"
-    >
-      <el-icon>
-        <component :is="getIconComponent(item.menuicon)" />
-      </el-icon>
-      <span>{{ item.menuname }}</span>
+    <el-menu-item index="/ProductManage">
+      <el-icon><Goods /></el-icon>
+      <span>商品管理</span>
+    </el-menu-item>
+
+    <el-menu-item index="/CartManage">
+      <el-icon><ShoppingCart /></el-icon>
+      <span>购物车</span>
+    </el-menu-item>
+
+    <el-menu-item index="/OrderManage">
+      <el-icon><Document /></el-icon>
+      <span>订单管理</span>
+    </el-menu-item>
+
+    <el-menu-item index="/UserManage">
+      <el-icon><User /></el-icon>
+      <span>用户管理</span>
     </el-menu-item>
   </el-menu>
 </template>
 
-<script>
+<script setup>
 import { computed } from 'vue'
-import { useStore } from 'vuex'
 import { useRoute } from 'vue-router'
 import {
   Home,
-  User,
-  Setting,
   Goods,
-  List,
+  ShoppingCart,
   Document,
-  Monitor
+  User
 } from '@element-plus/icons-vue'
 
-export default {
-  name: "MainAside",
-  components: {
-    Home
-  },
-  props: {
-    isCollapse: Boolean
-  },
-  setup() {
-    const store = useStore()
-    const route = useRoute()
+const route = useRoute()
+const props = defineProps(['isCollapse'])
 
-    // 获取当前路由用于默认激活状态
-    const currentRoute = computed(() => route.path)
+// 获取当前路由用于默认激活状态
+const currentRoute = computed(() => route.path)
 
-    // 安全地获取菜单数据，添加错误处理
-    const menu = computed(() => {
-      // 如果 store 或 store.state 不存在，返回空数组
-      if (!store || !store.state) {
-        console.warn('Store is not available, returning empty menu')
-        return []
-      }
-      return store.state.menu || []
-    })
-
-    // 图标映射表
-    const iconMap = {
-      'el-icon-s-custom': User,
-      'el-icon-user-solid': User,
-      'el-icon-s-tools': Setting,
-      'el-icon-s-goods': Goods,
-      'el-icon-s-order': List,
-      'el-icon-document': Document,
-      'el-icon-monitor': Monitor
-    }
-
-    // 根据图标名称获取对应的图标组件
-    const getIconComponent = (iconName) => {
-      return iconMap[iconName] || Monitor // 默认图标
-    }
-
-    return {
-      menu,
-      currentRoute,
-      getIconComponent
-    }
-  }
+return {
+  currentRoute
 }
 </script>
 
