@@ -54,6 +54,17 @@ public class UserController {
     public boolean delete(Integer id){
         return userService.removeById(id);
     }
+
+    //登录
+    @PostMapping("/login")
+    public Result login(@RequestBody User user){
+        List<User> list = userService.lambdaQuery()
+                .eq(User::getNo, user.getNo())  // 修复：去掉getNo后的括号，补充用户输入的no
+                .eq(User::getPassword, user.getPassword())
+                .list();
+        return list.size() > 0 ? Result.suc(list.get(0)) : Result.fail();  // 修复：去掉末尾分号
+    }
+
     //查询（模糊、匹配）
     @PostMapping("/listPage")
 //    public List<User> listPage(@RequestBody HashMap map){
