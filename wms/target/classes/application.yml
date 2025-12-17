@@ -1,14 +1,13 @@
 server:
-  port: 8090  # 项目启动端口
-
+  port: 8090
+  address: 0.0.0.0  # 添加这一行！
+  
 spring:
-  # 数据库配置
   datasource:
     url: jdbc:mysql://localhost:3306/book?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
-    driver-class-name: com.mysql.cj.jdbc.Driver  # MySQL 8.0+ 驱动
-    username: root  # 数据库用户名
-    password: 123456  # 数据库密码
-  # 解决 Swagger 兼容性问题：切换路径匹配策略
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 123456
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
@@ -16,7 +15,8 @@ spring:
 # MyBatis-Plus 配置
 mybatis-plus:
   configuration:
-    map-underscore-to-camel-case: true  # 下划线转驼峰命名
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # 打印 SQL 日志（调试用）
-  mapper-locations: classpath:mapper/**/*.xml  # 扫描 Mapper XML 文件
-  type-aliases-package: com.wms.entity  # 实体类别名包
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  # 注释掉或删除下面这行（因为你没有 XML 文件）
+  # mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.wms.entity
