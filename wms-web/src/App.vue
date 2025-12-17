@@ -2,7 +2,7 @@
   <div id="app">
     <!-- 只有非登录页才显示MainIndex布局 -->
     <MainIndex v-if="!$route.meta.noLayout"></MainIndex>
-    <!-- 登录页直接渲染，不显示布局 -->
+    <!-- 登录页直接渲染，不显示  布局 -->
     <router-view v-else></router-view>
   </div>
 </template>
