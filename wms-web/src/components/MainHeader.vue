@@ -82,7 +82,7 @@ export default {
 
     const toUser = () => {
       console.log('跳转到个人中心')
-      router.push("/Home")
+      router.push("/UserManage")
     }
 
     const logout = () => {
