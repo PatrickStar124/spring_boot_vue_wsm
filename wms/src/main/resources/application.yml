@@ -12,7 +12,7 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
 
-# MyBatis-Plus 配置
+# MyBatis-Plus 配置1
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
