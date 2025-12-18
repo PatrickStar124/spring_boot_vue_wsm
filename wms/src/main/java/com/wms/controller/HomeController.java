@@ -3,8 +3,6 @@ package com.wms.controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @RestController
 @RequestMapping("/")
@@ -23,13 +21,17 @@ public class HomeController {
                 ".method { font-weight: bold; padding: 2px 6px; border-radius: 3px; }" +
                 ".get { background: #d4edda; color: #155724; }" +
                 ".post { background: #fff3cd; color: #856404; }" +
+                ".put { background: #cce5ff; color: #004085; }" +
                 ".delete { background: #f8d7da; color: #721c24; }" +
                 ".test-area { margin-top: 15px; }" +
-                "input, button { padding: 8px; margin: 5px; }" +
+                "input, button, textarea { padding: 8px; margin: 5px; }" +
+                "textarea { width: 400px; height: 100px; font-family: monospace; }" +
+                ".json-input { width: 400px; height: 120px; font-family: monospace; }" +
                 "</style>" +
                 "</head>" +
                 "<body>" +
                 "<h1>📚 图书购物车系统 API 测试页面</h1>" +
+                "<p>当前时间: " + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "</p>" +
 
                 "<h3>👤 用户模块</h3>" +
                 "<div class='api-item'>" +
@@ -62,6 +64,23 @@ public class HomeController {
                 "</div></div>" +
 
                 "<h3>📚 图书模块</h3>" +
+
+                // === 只修改这里：新增图书接口 ===
+                "<div class='api-item'>" +
+                "<span class='method post'>POST</span> /book/save" +
+                "<div class='test-area'>" +
+                "<textarea id='bookJson' class='json-input' placeholder='输入图书JSON数据'>" +
+                "{\n" +
+                "  \"name\": \"Java编程思想\",\n" +
+                "  \"author\": \"Bruce Eckel\",\n" +
+                "  \"price\": 108.00,\n" +
+                "  \"stock\": 50\n" +
+                "}" +
+                "</textarea><br>" +
+                "<button onclick=\"testPost('/book/save', JSON.parse(document.getElementById('bookJson').value))\">新增图书</button>" +
+                "</div></div>" +
+                // === 结束修改 ===
+
                 "<div class='api-item'>" +
                 "<span class='method get'>GET</span> /book/list" +
                 "<div class='test-area'>" +
@@ -114,6 +133,7 @@ public class HomeController {
                 "<pre id='result' style='background: #f5f5f5; padding: 15px; border-radius: 5px; max-height: 300px; overflow: auto;'>点击上面的按钮测试...</pre>" +
 
                 "<script>" +
+                // === JS代码完全保持你原来的 ===
                 "async function testGet(url) {" +
                 "    showLoading();" +
                 "    try {" +
