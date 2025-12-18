@@ -13,7 +13,7 @@ const routes = [
         path: '/',
         redirect: '/home'
     },
-    // 所有页面设为顶级路由，渲染到App.vue的MainIndex里的router-view
+    //  所有页面设为顶级路由，渲染到App.vue的MainIndex里的router-view
     {
         path: '/home',
         name: 'Home',
