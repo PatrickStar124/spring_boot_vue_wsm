@@ -2,13 +2,13 @@
   <div class="cart-item">
     <div class="item-left">
       <div class="item-image">
-        <img :src="item.book.image || '/default-book.jpg'" :alt="item.book.name" />
+        <img :src="item.book?.image || '/default-book.jpg'" :alt="item.book?.name" />
       </div>
       <div class="item-info">
-        <h4 class="item-title">{{ item.book.name }}</h4>
-        <p class="item-author">作者：{{ item.book.author }}</p>
+        <h4 class="item-title">{{ item.book?.name || '未知图书' }}</h4>
+        <p class="item-author" v-if="item.book?.author">作者：{{ item.book.author }}</p>
         <div class="item-price">
-          ¥{{ item.book.price ? item.book.price.toFixed(2) : '0.00' }}
+          ¥{{ item.book?.price ? item.book.price.toFixed(2) : '0.00' }}
         </div>
       </div>
     </div>
@@ -108,6 +108,9 @@ export default {
   overflow: hidden;
   border-radius: 4px;
   background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .item-image img {
