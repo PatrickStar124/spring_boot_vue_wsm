@@ -1,24 +1,49 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import LoginForm from '../components/LoginForm.vue';
-import MainIndex from '../components/MainIndex.vue';
+// src/router/index.js
+import { createRouter, createWebHistory } from 'vue-router'
+import LoginForm from '../components/LoginForm.vue'
+// import MainIndex from '../components/MainIndex.vue'
+import HomePage from '../components/HomePage.vue'
+import AppMain from '../components/AppMain.vue'
 
-// 必须是数组！
 const routes = [
     {
         path: '/',
-        name: 'login',
+        name: 'Login',
         component: LoginForm
     },
+    // {
+    //     path: '/Index',
+    //     name: 'MainIndex',
+    //     component: MainIndex,
+    //     redirect: '/Home',
+    //     children: [
+    //         {
+    //             path: '/Home',
+    //             name: 'HomePage',
+    //             component: HomePage
+    //         },
+    //         {
+    //             path: '/AppMain',
+    //             name: 'AppMain',
+    //             component: AppMain
+    //         }
+    //     ]
+    // }
     {
-        path: '/Index',
-        name: 'mainIndex',
-        component: MainIndex
+        path: '/Home',
+        name: 'HomePage',
+        component: HomePage
+    },
+    {
+        path: '/AppMain',
+        name: 'AppMain',
+        component: AppMain
     }
-];
+]
 
 const router = createRouter({
     history: createWebHistory(),
-    routes // 这里必须传入数组
-});
+    routes
+})
 
-export default router;
+export default router

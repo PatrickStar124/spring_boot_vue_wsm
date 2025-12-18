@@ -1,15 +1,19 @@
 <template>
   <div id="app">
-    <!-- 路由容器：所有匹配的路由组件都会在这里渲染 -->
-    <router-view/>
+    <MainIndex></MainIndex>
   </div>
 </template>
 
 <script>
+
+import MainIndex from "./components/MainIndex.vue";
+
 export default {
-  name: 'App'
-  // 无需注册任何组件，路由会自动渲染匹配的组件（如 LoginForm、MainIndex 等）
-};
+  name: 'App',
+  components: {
+      MainIndex: MainIndex
+  }
+}
 </script>
 
 <style>
