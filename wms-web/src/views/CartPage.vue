@@ -1,0 +1,516 @@
+<template>
+  <div class="cart-page">
+    <header class="header">
+      <h1>🛒 我的购物车</h1>
+      <div class="header-actions">
+        <button @click="goHome" class="home-btn">返回首页</button>
+        <button @click="goToBookList" class="booklist-btn">继续购物</button>
+        <div class="cart-summary" v-if="user">
+          共 {{ cartItems.length }} 件商品
+        </div>
+        <div class="user-info" v-if="user">
+          <span>{{ user.name }}</span>
+          <button @click="logout" class="logout-btn">退出</button>
+        </div>
+      </div>
+    </header>
+
+    <div v-if="!user" class="not-logged-in">
+      <div class="login-prompt">
+        <h3>请先登录</h3>
+        <p>登录后查看和管理购物车</p>
+        <div class="prompt-actions">
+          <button @click="goToLogin" class="login-btn">立即登录</button>
+          <button @click="goHome" class="continue-btn">继续浏览</button>
+        </div>
+      </div>
+    </div>
+
+    <div v-else>
+      <div v-if="loading" class="loading">加载购物车...</div>
+
+      <div v-else-if="cartItems.length === 0" class="empty-cart">
+        <div class="empty-icon">🛒</div>
+        <h3>购物车空空如也</h3>
+        <p>快去挑选心仪的图书吧</p>
+        <div class="empty-actions">
+          <button @click="goToBookList" class="browse-btn">浏览图书</button>
+          <button @click="goHome" class="home-btn">返回首页</button>
+        </div>
+      </div>
+
+      <div v-else class="cart-content">
+        <div class="cart-items">
+          <div class="cart-header">
+            <h3>商品列表</h3>
+            <button @click="clearCart" class="clear-btn" :disabled="clearingAll">
+              {{ clearingAll ? '清空中...' : '清空购物车' }}
+            </button>
+          </div>
+
+          <div class="items-list">
+            <CartItem
+                v-for="item in cartItems"
+                :key="item.id"
+                :item="item"
+                @remove="handleRemove"
+            />
+          </div>
+        </div>
+
+        <div class="cart-sidebar">
+          <div class="order-summary">
+            <h3>订单摘要</h3>
+            <div class="summary-item">
+              <span>商品数量</span>
+              <span>{{ cartItems.length }} 件</span>
+            </div>
+            <div class="summary-item">
+              <span>商品总价</span>
+              <span class="total-price">¥{{ totalPrice.toFixed(2) }}</span>
+            </div>
+            <div class="summary-item discount">
+              <span>优惠折扣</span>
+              <span>-¥0.00</span>
+            </div>
+            <div class="summary-item final">
+              <span>应付金额</span>
+              <span class="final-price">¥{{ totalPrice.toFixed(2) }}</span>
+            </div>
+
+            <button class="checkout-btn" @click="checkout">
+              去结算
+            </button>
+
+            <div class="secure-checkout">
+              <span>🔒 安全支付保障</span>
+            </div>
+          </div>
+
+          <div class="cart-tips">
+            <h4>购物须知</h4>
+            <ul>
+              <li>购物车商品最多保存30天</li>
+              <li>结算前请确认商品信息</li>
+              <li>支持在线支付和货到付款</li>
+              <li>有任何问题请联系客服</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import axios from 'axios'
+import CartItem from '@/components/CartItem.vue'
+
+export default {
+  name: 'CartPage',
+  components: {
+    CartItem
+  },
+  data() {
+    return {
+      user: null,
+      cartItems: [],
+      loading: true,
+      clearingAll: false
+    }
+  },
+  computed: {
+    totalPrice() {
+      return this.cartItems.reduce((total, item) => {
+        const price = item.book?.price || 0
+        return total + price
+      }, 0)
+    }
+  },
+  created() {
+    this.loadUser()
+    if (this.user) {
+      this.fetchCart()
+    } else {
+      this.loading = false
+    }
+  },
+  methods: {
+    loadUser() {
+      const userStr = localStorage.getItem('user')
+      if (userStr) {
+        try {
+          this.user = JSON.parse(userStr)
+        } catch (e) {
+          console.error('解析用户信息失败:', e)
+        }
+      }
+    },
+    async fetchCart() {
+      this.loading = true
+      try {
+        const response = await axios.get('http://localhost:8090/cart/list', {
+          params: { userId: this.user.id }
+        })
+        if (response.data.code === 200) {
+          this.cartItems = response.data.data
+        } else {
+          alert('获取购物车失败: ' + response.data.msg)
+        }
+      } catch (error) {
+        console.error('获取购物车失败:', error)
+        alert('网络错误，请稍后重试')
+      } finally {
+        this.loading = false
+      }
+    },
+    handleRemove(removedItem) {
+      this.cartItems = this.cartItems.filter(item => item.id !== removedItem.id)
+    },
+    async clearCart() {
+      if (!confirm('确定要清空购物车吗？')) return
+
+      this.clearingAll = true
+      try {
+        // 这里需要后端提供清空购物车的接口
+        // 暂时逐个删除
+        for (const item of [...this.cartItems]) {
+          await axios.delete('http://localhost:8090/cart/remove', {
+            params: {
+              userId: this.user.id,
+              bookId: item.bookId
+            }
+          })
+        }
+        this.cartItems = []
+        alert('购物车已清空')
+      } catch (error) {
+        console.error('清空购物车失败:', error)
+        alert('清空购物车失败')
+      } finally {
+        this.clearingAll = false
+      }
+    },
+    checkout() {
+      if (this.cartItems.length === 0) {
+        alert('购物车为空')
+        return
+      }
+      alert('结算功能开发中...')
+    },
+    goHome() {
+      this.$router.push('/')
+    },
+    goToBookList() {
+      this.$router.push('/booklist')
+    },
+    goToLogin() {
+      this.$router.push('/login')
+    },
+    logout() {
+      localStorage.removeItem('user')
+      this.user = null
+      this.cartItems = []
+      alert('已退出登录')
+      this.$router.push('/')
+    }
+  }
+}
+</script>
+
+<style scoped>
+.cart-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.header-actions {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.user-info {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-left: 10px;
+}
+
+.cart-summary {
+  padding: 6px 12px;
+  background: #f0f7ff;
+  color: #1890ff;
+  border-radius: 15px;
+  font-size: 14px;
+  margin-right: 10px;
+}
+
+.home-btn, .booklist-btn, .login-btn, .continue-btn, .logout-btn,
+.browse-btn, .clear-btn, .checkout-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.home-btn {
+  background: #1890ff;
+  color: white;
+}
+
+.booklist-btn {
+  background: #52c41a;
+  color: white;
+}
+
+.login-btn {
+  background: #1890ff;
+  color: white;
+}
+
+.continue-btn {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.logout-btn {
+  background: #f5222d;
+  color: white;
+}
+
+.browse-btn {
+  background: #1890ff;
+  color: white;
+  padding: 10px 20px;
+}
+
+.clear-btn {
+  background: #ff4d4f;
+  color: white;
+}
+
+.clear-btn:disabled {
+  background: #d9d9d9;
+  cursor: not-allowed;
+}
+
+.checkout-btn {
+  width: 100%;
+  padding: 14px;
+  background: #52c41a;
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+  margin-top: 20px;
+}
+
+.checkout-btn:hover {
+  background: #73d13d;
+}
+
+.not-logged-in {
+  padding: 40px;
+  background: white;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.login-prompt {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.login-prompt h3 {
+  font-size: 24px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.login-prompt p {
+  color: #666;
+  margin-bottom: 25px;
+}
+
+.prompt-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.empty-cart {
+  padding: 60px 40px;
+  background: white;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 60px;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.empty-cart h3 {
+  font-size: 22px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.empty-cart p {
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.empty-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.loading {
+  text-align: center;
+  padding: 50px;
+  font-size: 18px;
+  color: #999;
+  background: white;
+  border-radius: 8px;
+}
+
+.cart-content {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 30px;
+}
+
+.cart-items {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.cart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cart-header h3 {
+  font-size: 18px;
+  color: #333;
+}
+
+.items-list {
+  min-height: 200px;
+}
+
+.cart-sidebar {
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+}
+
+.order-summary {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.order-summary h3 {
+  font-size: 18px;
+  margin-bottom: 20px;
+  color: #333;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  color: #666;
+}
+
+.summary-item.discount {
+  color: #52c41a;
+}
+
+.summary-item.final {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #f0f0f0;
+  font-weight: 600;
+  color: #333;
+}
+
+.total-price, .final-price {
+  font-weight: bold;
+  color: #ff4d4f;
+}
+
+.final-price {
+  font-size: 20px;
+}
+
+.secure-checkout {
+  text-align: center;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #f0f0f0;
+  color: #52c41a;
+  font-size: 12px;
+}
+
+.cart-tips {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.cart-tips h4 {
+  font-size: 16px;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.cart-tips ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cart-tips li {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+  padding-left: 15px;
+  position: relative;
+}
+
+.cart-tips li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #1890ff;
+}
+</style>
