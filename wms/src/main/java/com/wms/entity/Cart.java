@@ -1,5 +1,6 @@
 package com.wms.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -19,4 +20,7 @@ public class Cart  implements Serializable {
     private Integer bookId;
     private Integer quantity;
     private BigDecimal price;
+
+    @TableField(exist = false)
+    private Book book;
 }
