@@ -11,45 +11,53 @@ const routes = [
     {
         path: '/home',
         name: 'Home',
-        component: () => import('@/views/HomePage.vue'), // 对应你的  HomePage.vue
+        component: () => import('@/views/HomePage.vue'),
         meta: { title: '首页' }
     },
     // 图书列表页
     {
         path: '/booklist',
         name: 'BookList',
-        component: () => import('@/views/BookList.vue'), // 对应你的 BookList.vue
+        component: () => import('@/views/BookList.vue'),
         meta: { title: '全部图书' }
+    },
+    // 新增书籍页面（仅管理员可访问）
+    {
+        path: '/bookadd',
+        name: 'BookAdd',
+        component: () => import('@/views/BookAdd.vue'), // 新增：导入添加书籍页面
+        meta: {
+            title: '新增书籍',
+            requiresAuth: true, // 需要登录
+            isAdmin: true // 需要管理员权限
+        }
     },
     // 购物车页面
     {
         path: '/cart',
         name: 'Cart',
-        component: () => import('@/views/CartPage.vue'), // 对应你的 CartPage.vue
-        meta: { title: '购物车' }
+        component: () => import('@/views/CartPage.vue'),
+        meta: { title: '购物车', requiresAuth: true } // 购物车也需要登录
     },
     // 用户中心页面
     {
         path: '/usercenter',
         name: 'UserCenter',
-        component: () => import('@/views/UserCenter.vue'), // 对应你的 UserCenter.vue
-        meta: { title: '个人中心' }
+        component: () => import('@/views/UserCenter.vue'),
+        meta: { title: '个人中心', requiresAuth: true } // 个人中心需要登录
     },
-    // 登录页面 - 作为独立页面，不嵌入布局
+    // 登录页面
     {
         path: '/login',
         name: 'Login',
-        component: () => import('@/views/LoginPage.vue'), // 对应你的 LoginPage.vue
-        meta: {
-            title: '登录',
-            // 你可以在这里添加 noLayout: true 等元信息，虽然App.vue已简化
-        }
+        component: () => import('@/views/LoginPage.vue'),
+        meta: { title: '登录' }
     },
     // 注册页面
     {
         path: '/register',
         name: 'Register',
-        component: () => import('@/views/RegisterPage.vue'), // 对应你的 RegisterPage.vue
+        component: () => import('@/views/RegisterPage.vue'),
         meta: { title: '注册' }
     },
     // 404 页面处理：重定向到首页
@@ -61,28 +69,52 @@ const routes = [
 
 // 创建路由实例
 const router = createRouter({
-    history: createWebHistory(process.env.BASE_URL), // 使用HTML5历史模式
+    history: createWebHistory(process.env.BASE_URL),
     routes
 })
 
 // 全局前置路由守卫
 router.beforeEach((to, from, next) => {
-    // 设置页面标题
+    // 1. 设置页面标题
     if (to.meta.title) {
         document.title = `${to.meta.title} - 图书购物车系统`
     }
 
-    // 重要：为了让你能无障碍测试所有页面，这里暂时直接放行所有路由
-    // 后续接入后端登录验证后，可以在此处添加鉴权逻辑
-    // 例如：检查 localStorage 中的 token 或 user 信息
-    // const isAuthenticated = localStorage.getItem('user');
-    // if (to.meta.requiresAuth && !isAuthenticated) {
-    //   next('/login');
-    // } else {
-    //   next();
-    // }
+    // 2. 鉴权逻辑
+    // 获取本地存储的用户信息
+    const userStr = localStorage.getItem('user')
+    let user = null
+    if (userStr) {
+        try {
+            user = JSON.parse(userStr)
+        } catch (e) {
+            console.error('解析用户信息失败:', e)
+            localStorage.removeItem('user') // 解析失败清空无效数据
+        }
+    }
 
-    next(); // 现在直接放行
+    // 3. 判断是否需要登录
+    if (to.meta.requiresAuth) {
+        // 未登录：跳转到登录页
+        if (!user) {
+            alert('请先登录后再操作！')
+            next({ path: '/login', query: { redirect: to.fullPath } }) // 登录后跳回原页面
+            return
+        }
+
+        // 已登录，但需要管理员权限
+        if (to.meta.isAdmin) {
+            // 假设用户对象有role字段，'admin'为管理员（根据你后端实际字段调整）
+            if (user.role !== 'admin') {
+                alert('无管理员权限，无法访问该页面！')
+                next({ path: '/booklist' }) // 跳回图书列表
+                return
+            }
+        }
+    }
+
+    // 4. 所有验证通过，放行
+    next()
 })
 
 export default router

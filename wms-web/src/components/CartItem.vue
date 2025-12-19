@@ -2,7 +2,12 @@
   <div class="cart-item">
     <div class="item-left">
       <div class="item-image">
-        <img :src="item.book?.image || '/default-book.jpg'" :alt="item.book?.name" />
+        <img
+            :src="item.book?.image || '/default-book.jpg'"
+            :alt="item.book?.name"
+            loading="lazy"
+            @error="$event.target.src = '/default-book.jpg'"
+        />
       </div>
       <div class="item-info">
         <h4 class="item-title">{{ item.book?.name || '未知图书' }}</h4>

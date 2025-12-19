@@ -1,7 +1,12 @@
 <template>
   <div class="book-card">
     <div class="book-cover">
-      <img :src="book.image || '/default-book.jpg'" :alt="book.name" />
+      <img
+          :src="book.image || '/default-book.jpg'"
+          :alt="book.name"
+          loading="lazy"
+          @error="$event.target.src = '/default-book.jpg'"
+      />
     </div>
     <div class="book-info">
       <h3 class="book-title">{{ book.name }}</h3>
