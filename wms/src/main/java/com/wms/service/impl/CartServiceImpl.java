@@ -21,7 +21,8 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements Ca
 
     @Autowired
     private BookMapper bookMapper;
-
+    @Autowired
+    private BookService bookService;
 
     @Override
     @Transactional
@@ -78,7 +79,7 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements Ca
             queryWrapper.eq("user_id", userId)
                     .eq("book_id", bookId);
 
-            //1.先获取购物车记录，知道要恢复多少库存
+            //1.先获取购物车记录，知道要恢复多少库存1
             Cart cart = this.getOne(queryWrapper);
             if (cart==null){
                 return Result.fail("商品不在购物车当中");
@@ -108,6 +109,10 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements Ca
             queryWrapper.eq("user_id", userId);
 
             List<Cart> cartItems = this.list(queryWrapper);
+
+            for (Cart cart : cartItems) {
+                cart.setBook((Book) bookService.getBookById(cart.getBookId()).getData());
+            }
 
             BigDecimal totalAmount = BigDecimal.ZERO;
             for (Cart cart : cartItems) {

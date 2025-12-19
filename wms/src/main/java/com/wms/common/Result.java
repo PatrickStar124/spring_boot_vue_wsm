@@ -6,7 +6,7 @@ import lombok.Data;
 public class Result {
     private int code;//编码200/400
     private String msg;//成功失败
-    private Long total;//总记录数
+    private Long total;
     private Object data;//数据
 
     public static Result fail() {
