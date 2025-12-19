@@ -27,11 +27,49 @@ public class HomeController {
                 "input, button, textarea { padding: 8px; margin: 5px; }" +
                 "textarea { width: 400px; height: 100px; font-family: monospace; }" +
                 ".json-input { width: 400px; height: 120px; font-family: monospace; }" +
+                ".file-input { border: 1px solid #ccc; padding: 6px; }" +
                 "</style>" +
                 "</head>" +
                 "<body>" +
                 "<h1>📚 图书购物车系统 API 测试页面</h1>" +
                 "<p>当前时间: " + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "</p>" +
+
+                "<h3>📁 文件上传模块</h3>" +
+                "<div class='api-item'>" +
+                "<span class='method post'>POST</span> /file/upload (图片上传)" +
+                "<div class='test-area'>" +
+                "<input type='file' id='imageFile' accept='image/*' class='file-input'>" +
+                "<button onclick=\"uploadImage()\">上传图片</button>" +
+                "<div id='uploadResult' style='margin-top:10px;'></div>" +
+                "<script>" +
+                "async function uploadImage() {" +
+                "    const fileInput = document.getElementById('imageFile');" +
+                "    if (!fileInput.files[0]) {" +
+                "        alert('请选择图片文件');" +
+                "        return;" +
+                "    }" +
+                "    const formData = new FormData();" +
+                "    formData.append('file', fileInput.files[0]);" +
+                "    document.getElementById('uploadResult').innerHTML = '上传中...';" +
+                "    try {" +
+                "        const response = await fetch('http://localhost:8090/file/upload', {" +
+                "            method: 'POST'," +
+                "            body: formData" +
+                "        });" +
+                "        const result = await response.json();" +
+                "        if (result.code === 200) {" +
+                "            document.getElementById('uploadResult').innerHTML = " +
+                "                '✅ 上传成功！<br>图片URL: <a href=\"' + result.data + '\" target=\"_blank\">' + result.data + '</a><br>' +" +
+                "                '<img src=\"' + result.data + '\" style=\"max-width: 200px; margin-top: 10px;\">';" +
+                "        } else {" +
+                "            document.getElementById('uploadResult').innerHTML = '❌ 上传失败: ' + result.msg;" +
+                "        }" +
+                "    } catch (error) {" +
+                "        document.getElementById('uploadResult').innerHTML = '❌ 请求失败: ' + error.message;" +
+                "    }" +
+                "}" +
+                "</script>" +
+                "</div></div>" +
 
                 "<h3>👤 用户模块</h3>" +
                 "<div class='api-item'>" +
@@ -65,7 +103,6 @@ public class HomeController {
 
                 "<h3>📚 图书模块</h3>" +
 
-                // === 只修改这里：新增图书接口 ===
                 "<div class='api-item'>" +
                 "<span class='method post'>POST</span> /book/save" +
                 "<div class='test-area'>" +
@@ -74,12 +111,12 @@ public class HomeController {
                 "  \"name\": \"Java编程思想\",\n" +
                 "  \"author\": \"Bruce Eckel\",\n" +
                 "  \"price\": 108.00,\n" +
-                "  \"stock\": 50\n" +
+                "  \"stock\": 50,\n" +
+                "  \"imageUrl\": \"这里可以填入上面上传得到的图片URL\"\n" +
                 "}" +
                 "</textarea><br>" +
                 "<button onclick=\"testPost('/book/save', JSON.parse(document.getElementById('bookJson').value))\">新增图书</button>" +
                 "</div></div>" +
-                // === 结束修改 ===
 
                 "<div class='api-item'>" +
                 "<span class='method get'>GET</span> /book/list" +
@@ -133,7 +170,6 @@ public class HomeController {
                 "<pre id='result' style='background: #f5f5f5; padding: 15px; border-radius: 5px; max-height: 300px; overflow: auto;'>点击上面的按钮测试...</pre>" +
 
                 "<script>" +
-                // === JS代码完全保持你原来的 ===
                 "async function testGet(url) {" +
                 "    showLoading();" +
                 "    try {" +
