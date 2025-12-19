@@ -12,7 +12,7 @@ export default {
 </script>
 
 <style>
-/* 全局基础样式 */
+/* 全局基础样式 1*/
 #app {
   height: 100%;
   font-family: Avenir, Helvetica, Arial, sans-serif;
