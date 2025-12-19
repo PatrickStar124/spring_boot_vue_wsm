@@ -14,7 +14,7 @@ const http = axios.create({
     headers: {
         'Content-Type': 'application/json;charset=utf-8'
     },
-    withCredentials: true //  允许携带Cookie（后端需要的话）1
+    withCredentials: true //  允许携带Cookie（后端需要的话）12
 })
 
 const app = createApp(App)
