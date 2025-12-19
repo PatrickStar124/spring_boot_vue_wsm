@@ -3,6 +3,7 @@ package com.wms.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.wms.common.Result;
 import lombok.Data;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -20,8 +21,6 @@ public class Book implements Serializable {
     private String author;          // 作者（必须）
     private BigDecimal price;       // 价格（必须，购物车计算核心）
     private Integer stock;          // 库存（必须，防止超卖）
-
-    private String imageUrl;
 
 
 }
