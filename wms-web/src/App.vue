@@ -1,34 +1,46 @@
 <template>
   <div id="app">
-    <!-- 只有非登录页才显示MainIndex布局 -->
-    <MainIndex v-if="!$route.meta.noLayout"></MainIndex>
-    <!-- 登录页直接渲染，不显  示  布局 -->
-    <router-view v-else></router-view>
+    <!-- 路由出口：根据路由动态显示 views/ 目录下的页面 -->
+    <router-view />
   </div>
 </template>
 
 <script>
-import MainIndex from "./components/MainIndex.vue";
-
 export default {
-  name: 'App',
-  components: {
-    MainIndex
-  }
+  name: 'App'
 }
 </script>
 
 <style>
+/* 全局基础样式 */
 #app {
   height: 100%;
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: #2c3e50;
 }
+
 /* 确保页面全屏 */
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
+}
+
+/* 全局链接样式 */
+a {
+  color: #1890ff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* 全局按钮基础样式 */
+button {
+  cursor: pointer;
+  font-family: inherit;
 }
 </style>

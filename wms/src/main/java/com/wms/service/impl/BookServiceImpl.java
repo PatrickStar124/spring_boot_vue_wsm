@@ -13,11 +13,11 @@ import java.util.List;
 @Service
 public class BookServiceImpl extends ServiceImpl<BookMapper, Book> implements BookService {
 
-    private final CartController cartController;
+    /*private final CartController cartController;
 
     public BookServiceImpl(CartController cartController) {
         this.cartController = cartController;
-    }
+    }*/
 
     @Override
     public Result getAllBooks() {
