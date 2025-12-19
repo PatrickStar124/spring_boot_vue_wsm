@@ -11,7 +11,7 @@ const routes = [
     {
         path: '/home',
         name: 'Home',
-        component: () => import('@/views/HomePage.vue'), // 对应你的 HomePage.vue
+        component: () => import('@/views/HomePage.vue'), // 对应你的  HomePage.vue
         meta: { title: '首页' }
     },
     // 图书列表页
