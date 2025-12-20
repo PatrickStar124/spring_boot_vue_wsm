@@ -1,15 +1,23 @@
 <template>
   <div class="book-card">
     <div class="book-cover">
+      <!-- 处理图片URL -->
       <img
-          :src="book.image || '/default-book.jpg'"
+          v-if="book.imageUrl && book.imageUrl.trim()"
+          :src="getImageUrl(book.imageUrl)"
           :alt="book.name"
           loading="lazy"
-          @error="$event.target.src = '/default-book.jpg'"
+          @error="(e) => e.target.style.display = 'none'"
       />
+      <!-- 没有图片时的占位符 -->
+      <div v-else class="no-image">
+        📚
+      </div>
     </div>
+
+    <!-- 图书信息部分 -->
     <div class="book-info">
-      <h3 class="book-title">{{ book.name }}</h3>
+      <h3 class="book-title">{{ book.name || '未知图书' }}</h3>
       <p class="book-author">作者：{{ book.author || '未知' }}</p>
       <p class="book-description">{{ book.description || '暂无描述' }}</p>
       <div class="book-footer">
@@ -20,9 +28,9 @@
         <button
             class="btn-add-to-cart"
             @click="addToCart"
-            :disabled="!currentUser || isAdding"
+            :disabled="!userStore.user || cartStore.loading"
         >
-          {{ isAdding ? '添加中...' : (currentUser ? '加入购物车' : '请先登录') }}
+          {{ cartStore.loading ? '添加中...' : (userStore.user ? '加入购物车' : '请先登录') }}
         </button>
       </div>
     </div>
@@ -30,7 +38,9 @@
 </template>
 
 <script>
-import axios from 'axios'
+import { useCartStore } from '@/store/cart'
+import { useUserStore } from '@/store/user'
+import { storeToRefs } from 'pinia'
 
 export default {
   name: 'BookCard',
@@ -40,54 +50,39 @@ export default {
       required: true
     }
   },
-  data() {
+  setup() {
+    const cartStore = useCartStore()
+    const userStore = useUserStore()
+    const { user } = storeToRefs(userStore)
+
     return {
-      isAdding: false,
-      currentUser: null
+      cartStore,
+      userStore,
+      user
     }
   },
-  created() {
-    this.loadUser()
-  },
   methods: {
-    loadUser() {
-      const userStr = localStorage.getItem('user')
-      if (userStr) {
-        try {
-          this.currentUser = JSON.parse(userStr)
-        } catch (e) {
-          console.error('解析用户信息失败:', e)
-        }
-      }
-    },
     async addToCart() {
-      if (!this.currentUser) {
+      if (!this.userStore.user) {
         alert('请先登录')
         this.$router.push('/login')
         return
       }
 
-      this.isAdding = true
-      try {
-        const response = await axios.post('http://localhost:8090/cart/add', null, {
-          params: {
-            userId: this.currentUser.id,
-            bookId: this.book.id
-          }
-        })
+      await this.cartStore.addToCart(this.book, this.userStore.user.id)
+      this.$emit('cart-updated')
+    },
 
-        if (response.data.code === 200) {
-          alert('已加入购物车')
-          this.$emit('cart-updated')
-        } else {
-          alert(response.data.msg || '加入购物车失败')
-        }
-      } catch (error) {
-        console.error('加入购物车失败:', error)
-        alert('网络错误，请稍后重试')
-      } finally {
-        this.isAdding = false
+    // 处理图片URL
+    getImageUrl(url) {
+      if (!url) return '';
+      // 如果已经是完整URL，直接返回
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
       }
+      // 如果是相对路径，添加后端地址
+      const baseUrl = 'http://localhost:8090';
+      return baseUrl + url;
     }
   }
 }
@@ -128,6 +123,11 @@ export default {
 
 .book-card:hover .book-cover img {
   transform: scale(1.05);
+}
+
+.no-image {
+  font-size: 60px;
+  color: #999;
 }
 
 .book-info {

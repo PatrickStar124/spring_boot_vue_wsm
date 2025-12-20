@@ -21,15 +21,14 @@ const routes = [
         component: () => import('@/views/BookList.vue'),
         meta: { title: '全部图书' }
     },
-    // 新增书籍页面（仅管理员可访问）
+    // 新增书籍页面（仅登录可访问，删除管理员限制）
     {
         path: '/bookadd',
         name: 'BookAdd',
-        component: () => import('@/views/BookAdd.vue'), // 新增：导入添加书籍页面
+        component: () => import('@/views/BookAdd.vue'),
         meta: {
             title: '新增书籍',
-            requiresAuth: true, // 需要登录
-            isAdmin: true // 需要管理员权限
+            requiresAuth: true
         }
     },
     // 购物车页面
@@ -37,14 +36,14 @@ const routes = [
         path: '/cart',
         name: 'Cart',
         component: () => import('@/views/CartPage.vue'),
-        meta: { title: '购物车', requiresAuth: true } // 购物车也需要登录
+        meta: { title: '购物车', requiresAuth: true }
     },
     // 用户中心页面
     {
         path: '/usercenter',
         name: 'UserCenter',
         component: () => import('@/views/UserCenter.vue'),
-        meta: { title: '个人中心', requiresAuth: true } // 个人中心需要登录
+        meta: { title: '个人中心', requiresAuth: true }
     },
     // 登录页面
     {
@@ -73,6 +72,21 @@ const router = createRouter({
     routes
 })
 
+// 用户状态管理函数
+function getUserFromLocalStorage() {
+    const userStr = localStorage.getItem('user')
+    if (userStr) {
+        try {
+            return JSON.parse(userStr)
+        } catch (e) {
+            console.error('解析用户信息失败:', e)
+            localStorage.removeItem('user')
+            return null
+        }
+    }
+    return null
+}
+
 // 全局前置路由守卫
 router.beforeEach((to, from, next) => {
     // 1. 设置页面标题
@@ -80,41 +94,34 @@ router.beforeEach((to, from, next) => {
         document.title = `${to.meta.title} - 图书购物车系统`
     }
 
-    // 2. 鉴权逻辑
-    // 获取本地存储的用户信息
-    const userStr = localStorage.getItem('user')
-    let user = null
-    if (userStr) {
-        try {
-            user = JSON.parse(userStr)
-        } catch (e) {
-            console.error('解析用户信息失败:', e)
-            localStorage.removeItem('user') // 解析失败清空无效数据
-        }
+    // 2. 检查用户登录状态
+    const user = getUserFromLocalStorage()
+
+    // 3. 验证需要登录的页面
+    if (to.meta.requiresAuth && !user) {
+        console.log('访问需要登录的页面，但用户未登录，跳转到登录页')
+        alert('请先登录后再操作！')
+        next({
+            path: '/login',
+            query: { redirect: to.fullPath }
+        })
+        return
     }
 
-    // 3. 判断是否需要登录
-    if (to.meta.requiresAuth) {
-        // 未登录：跳转到登录页
-        if (!user) {
-            alert('请先登录后再操作！')
-            next({ path: '/login', query: { redirect: to.fullPath } }) // 登录后跳回原页面
-            return
-        }
-
-        // 已登录，但需要管理员权限
-        if (to.meta.isAdmin) {
-            // 假设用户对象有role字段，'admin'为管理员（根据你后端实际字段调整）
-            if (user.role !== 'admin') {
-                alert('无管理员权限，无法访问该页面！')
-                next({ path: '/booklist' }) // 跳回图书列表
-                return
-            }
-        }
+    // 4. 如果已登录且访问登录/注册页，跳转到首页
+    if (user && (to.path === '/login' || to.path === '/register')) {
+        console.log('已登录用户访问登录/注册页，跳转到首页')
+        next({ path: '/home' })
+        return
     }
 
-    // 4. 所有验证通过，放行
+    // 5. 所有验证通过，放行
     next()
+})
+
+// 全局后置钩子
+router.afterEach((to, from) => {
+    console.log(`路由切换: ${from.path} -> ${to.path}`)
 })
 
 export default router

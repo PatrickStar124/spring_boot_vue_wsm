@@ -3,17 +3,23 @@
     <div class="item-left">
       <div class="item-image">
         <img
-            :src="item.book?.image || '/default-book.jpg'"
-            :alt="item.book?.name"
+            :src="getImageUrl(item.image)"
+            :alt="item.bookName"
             loading="lazy"
             @error="$event.target.src = '/default-book.jpg'"
         />
       </div>
       <div class="item-info">
-        <h4 class="item-title">{{ item.book?.name || '未知图书' }}</h4>
-        <p class="item-author" v-if="item.book?.author">作者：{{ item.book.author }}</p>
+        <h4 class="item-title">{{ item.bookName || '未知图书' }}</h4>
+        <p class="item-author" v-if="item.author">作者：{{ item.author }}</p>
         <div class="item-price">
-          ¥{{ item.book?.price ? item.book.price.toFixed(2) : '0.00' }}
+          ¥{{ item.price ? item.price.toFixed(2) : '0.00' }}
+        </div>
+        <div class="item-quantity">
+          数量：{{ item.quantity }} 件
+        </div>
+        <div class="item-stock" v-if="item.stock !== undefined">
+          库存：{{ item.stock }} 本
         </div>
       </div>
     </div>
@@ -22,6 +28,11 @@
       <button class="btn-remove" @click="removeFromCart" :disabled="isRemoving">
         {{ isRemoving ? '移除中...' : '移除' }}
       </button>
+    </div>
+
+    <!-- 调试信息（开发阶段显示） -->
+    <div v-if="false" class="debug-info" style="font-size: 10px; color: #999;">
+      ID: {{ item.id }}, BookID: {{ item.bookId }}
     </div>
   </div>
 </template>
@@ -43,6 +54,15 @@ export default {
     }
   },
   methods: {
+    getImageUrl(url) {
+      if (!url) return '/default-book.jpg';
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+      }
+      const baseUrl = 'http://localhost:8090';
+      return baseUrl + url;
+    },
+
     async removeFromCart() {
       const userStr = localStorage.getItem('user')
       if (!userStr) {
@@ -69,6 +89,7 @@ export default {
 
         if (response.data.code === 200) {
           this.$emit('remove', this.item)
+          alert('已移除商品')
         } else {
           alert(response.data.msg || '移除失败')
         }
@@ -140,15 +161,22 @@ export default {
 }
 
 .item-author {
-  font-size: 14px;
+  font-size: 13px;
   color: #666;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .item-price {
   font-size: 18px;
   font-weight: bold;
   color: #ff4d4f;
+  margin-bottom: 4px;
+}
+
+.item-quantity, .item-stock {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 2px;
 }
 
 .item-right {

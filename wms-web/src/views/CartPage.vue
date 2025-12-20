@@ -5,17 +5,17 @@
       <div class="header-actions">
         <button @click="goHome" class="home-btn">返回首页</button>
         <button @click="goToBookList" class="booklist-btn">继续购物</button>
-        <div class="cart-summary" v-if="user">
-          共 {{ cartItems.length }} 件商品
+        <div class="cart-summary" v-if="userStore.user">
+          共 {{ cartStore.cartTotalQuantity }} 件商品
         </div>
-        <div class="user-info" v-if="user">
-          <span>{{ user.name }}</span>
+        <div class="user-info" v-if="userStore.user">
+          <span>{{ userStore.user.name }}</span>
           <button @click="logout" class="logout-btn">退出</button>
         </div>
       </div>
     </header>
 
-    <div v-if="!user" class="not-logged-in">
+    <div v-if="!userStore.user" class="not-logged-in">
       <div class="login-prompt">
         <h3>请先登录</h3>
         <p>登录后查看和管理购物车</p>
@@ -27,9 +27,9 @@
     </div>
 
     <div v-else>
-      <div v-if="loading" class="loading">加载购物车...</div>
+      <div v-if="cartStore.loading" class="loading">加载购物车...</div>
 
-      <div v-else-if="cartItems.length === 0" class="empty-cart">
+      <div v-else-if="cartStore.cartList.length === 0" class="empty-cart">
         <div class="empty-icon">🛒</div>
         <h3>购物车空空如也</h3>
         <p>快去挑选心仪的图书吧</p>
@@ -50,7 +50,7 @@
 
           <div class="items-list">
             <CartItem
-                v-for="item in cartItems"
+                v-for="item in cartStore.cartList"
                 :key="item.id"
                 :item="item"
                 @remove="handleRemove"
@@ -63,11 +63,11 @@
             <h3>订单摘要</h3>
             <div class="summary-item">
               <span>商品数量</span>
-              <span>{{ cartItems.length }} 件</span>
+              <span>{{ cartStore.cartTotalQuantity }} 件</span>
             </div>
             <div class="summary-item">
               <span>商品总价</span>
-              <span class="total-price">¥{{ totalPrice.toFixed(2) }}</span>
+              <span class="total-price">¥{{ cartStore.cartTotalPrice }}</span>
             </div>
             <div class="summary-item discount">
               <span>优惠折扣</span>
@@ -75,7 +75,7 @@
             </div>
             <div class="summary-item final">
               <span>应付金额</span>
-              <span class="final-price">¥{{ totalPrice.toFixed(2) }}</span>
+              <span class="final-price">¥{{ cartStore.cartTotalPrice }}</span>
             </div>
 
             <button class="checkout-btn" @click="checkout">
@@ -105,94 +105,85 @@
 <script>
 import axios from 'axios'
 import CartItem from '@/components/CartItem.vue'
+import { useCartStore } from '@/store/cart'
+import { useUserStore } from '@/store/user'
+import { storeToRefs } from 'pinia'
 
 export default {
   name: 'CartPage',
   components: {
     CartItem
   },
+  setup() {
+    const cartStore = useCartStore()
+    const userStore = useUserStore()
+    const { cartList, loading, cartTotalQuantity, cartTotalPrice } = storeToRefs(cartStore)
+    const { user } = storeToRefs(userStore)
+
+    return {
+      cartStore,
+      userStore,
+      cartList,
+      loading,
+      cartTotalQuantity,
+      cartTotalPrice,
+      user
+    }
+  },
   data() {
     return {
-      user: null,
-      cartItems: [],
-      loading: true,
       clearingAll: false
     }
   },
-  computed: {
-    totalPrice() {
-      return this.cartItems.reduce((total, item) => {
-        const price = item.book?.price || 0
-        return total + price
-      }, 0)
-    }
-  },
   created() {
-    this.loadUser()
-    if (this.user) {
-      this.fetchCart()
-    } else {
-      this.loading = false
+    if (this.userStore.user) {
+      this.cartStore.initCartList(this.userStore.user.id)
     }
   },
   methods: {
-    loadUser() {
-      const userStr = localStorage.getItem('user')
-      if (userStr) {
-        try {
-          this.user = JSON.parse(userStr)
-        } catch (e) {
-          console.error('解析用户信息失败:', e)
-        }
-      }
-    },
-    async fetchCart() {
-      this.loading = true
-      try {
-        const response = await axios.get('http://localhost:8090/cart/list', {
-          params: { userId: this.user.id }
-        })
-        if (response.data.code === 200) {
-          this.cartItems = response.data.data
-        } else {
-          alert('获取购物车失败: ' + response.data.msg)
-        }
-      } catch (error) {
-        console.error('获取购物车失败:', error)
-        alert('网络错误，请稍后重试')
-      } finally {
-        this.loading = false
-      }
-    },
     handleRemove(removedItem) {
-      this.cartItems = this.cartItems.filter(item => item.id !== removedItem.id)
+      this.cartStore.cartList = this.cartStore.cartList.filter(item => item.id !== removedItem.id)
+      this.removeCartItem(removedItem)
+    },
+    async removeCartItem(item) {
+      try {
+        await axios.delete('http://localhost:8090/cart/remove', {
+          params: {
+            userId: this.userStore.user.id,
+            bookId: item.bookId
+          }
+        })
+      } catch (error) {
+        console.error('删除购物车商品失败:', error)
+        alert('删除商品失败，请稍后重试')
+        this.cartStore.initCartList(this.userStore.user.id)
+      }
     },
     async clearCart() {
       if (!confirm('确定要清空购物车吗？')) return
 
       this.clearingAll = true
       try {
-        // 这里需要后端提供清空购物车的接口
-        // 暂时逐个删除
-        for (const item of [...this.cartItems]) {
+        for (const item of [...this.cartStore.cartList]) {
           await axios.delete('http://localhost:8090/cart/remove', {
             params: {
-              userId: this.user.id,
+              userId: this.userStore.user.id,
               bookId: item.bookId
             }
           })
         }
-        this.cartItems = []
+        this.cartStore.clearCart()
         alert('购物车已清空')
       } catch (error) {
         console.error('清空购物车失败:', error)
-        alert('清空购物车失败')
+        alert('清空购物车失败，请稍后重试')
+        this.cartStore.initCartList(this.userStore.user.id)
       } finally {
         this.clearingAll = false
       }
     },
     checkout() {
-      if (this.cartItems.length === 0) {
+      if (this.cartStore.cartList.length === 0) {
         alert('购物车为空')
         return
       }
@@ -208,9 +199,8 @@ export default {
       this.$router.push('/login')
     },
     logout() {
-      localStorage.removeItem('user')
-      this.user = null
-      this.cartItems = []
+      this.userStore.clearUser()
+      this.cartStore.clearCart()
       alert('已退出登录')
       this.$router.push('/')
     }

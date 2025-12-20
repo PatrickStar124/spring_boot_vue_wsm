@@ -4,9 +4,10 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import './assets/global.css'
 import router from './router'
-import store from './store'  // 没有则注释掉这行12
+import store from './store'
 import axios from "axios"
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import { createPinia } from 'pinia'
 
 // 优化：创建axios实例，避免全局配置污染，确保baseURL生效
 const http = axios.create({
@@ -14,10 +15,11 @@ const http = axios.create({
     headers: {
         'Content-Type': 'application/json;charset=utf-8'
     },
-    withCredentials: true //  允许携带Cookie（后端需要的话）12
+    withCredentials: true //  允许携带Cookie（后端需要的话）
 })
 
 const app = createApp(App)
+const pinia = createPinia() // 创建Pinia实例
 
 // 挂载axios实例到全局
 app.config.globalProperties.$axios = http
@@ -26,6 +28,7 @@ app.config.globalProperties.$httpUrl = 'http://localhost:8090'
 // 注册Element Plus和插件
 app.use(ElementPlus, { size: 'small' })
 app.use(router)
+app.use(pinia) // 注册Pinia
 if (store) { // 防止store不存在报错
     app.use(store)
 }
