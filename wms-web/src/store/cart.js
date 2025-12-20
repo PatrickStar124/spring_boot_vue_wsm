@@ -110,7 +110,7 @@ export const useCartStore = defineStore('cart', {
                             quantity: item.quantity || 1,
                             stock: stock,
                             image: this.fixImageUrl(imageUrl),
-                            author: author //   添加作者信息123
+                            author: author //   添加作者信息
                         }
                     })
 
