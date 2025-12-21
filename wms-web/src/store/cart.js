@@ -215,7 +215,7 @@ export const useCartStore = defineStore('cart', {
                 }
             }
 
-            return ''; // 没有找到图片
+            return ''; // 没有找到图片0
         },
 
         // 查找图片字段的方法（用于调试）
