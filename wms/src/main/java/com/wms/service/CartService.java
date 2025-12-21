@@ -12,4 +12,7 @@ public interface CartService extends IService<Cart> {
 
     Result getCartByUser(Integer userId);
 
+    // 新增结算方法
+    @Transactional
+    Result checkout(Integer userId);
 }

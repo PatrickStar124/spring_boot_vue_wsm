@@ -4,7 +4,8 @@ import axios from 'axios'
 export const useCartStore = defineStore('cart', {
     state: () => ({
         cartList: [],
-        loading: false
+        loading: false,
+        checkoutProcessing: false
     }),
 
     actions: {
@@ -131,6 +132,45 @@ export const useCartStore = defineStore('cart', {
                 console.error('获取购物车列表失败:', error)
             } finally {
                 this.loading = false
+            }
+        },
+
+        // 新增结算方法
+        async checkout(userId) {
+            if (!userId) {
+                throw new Error('用户未登录');
+            }
+
+            if (this.cartList.length === 0) {
+                throw new Error('购物车为空');
+            }
+
+            this.checkoutProcessing = true;
+            try {
+                const response = await axios.post('http://localhost:8090/cart/checkout', null, {
+                    params: {
+                        userId: userId
+                    }
+                });
+
+                if (response.data.code === 200) {
+                    // 结算成功，清空购物车
+                    this.cartList = [];
+                    console.log('结算成功:', response.data);
+
+                    return {
+                        success: true,
+                        data: response.data.data,
+                        message: response.data.msg
+                    };
+                } else {
+                    throw new Error(response.data.msg || '结算失败');
+                }
+            } catch (error) {
+                console.error('结算失败:', error);
+                throw error;
+            } finally {
+                this.checkoutProcessing = false;
             }
         },
 

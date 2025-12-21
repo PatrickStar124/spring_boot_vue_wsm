@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements CartService {
@@ -48,7 +48,7 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements Ca
             // 4. 检查是否已在购物车
             QueryWrapper<Cart> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("user_id", userId)
-            .eq("book_id", bookId);
+                    .eq("book_id", bookId);
             Cart existingCart = this.getOne(queryWrapper);
 
             if(existingCart != null){
@@ -126,6 +126,88 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements Ca
         }
     }
 
+    @Override
+    @Transactional
+    public Result checkout(Integer userId) {
+        try {
+            // 1. 获取用户的购物车列表
+            QueryWrapper<Cart> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("user_id", userId);
+            List<Cart> cartItems = this.list(queryWrapper);
+
+            if (cartItems == null || cartItems.isEmpty()) {
+                return Result.fail("购物车为空，无法结算");
+            }
+
+            // 2. 准备结算信息
+            List<Map<String, Object>> checkoutItems = new ArrayList<>();
+            BigDecimal totalPrice = BigDecimal.ZERO;
+            int totalQuantity = 0;
+
+            // 3. 记录结算的商品信息（但不恢复库存，因为库存已经在加入购物车时减少了）
+            for (Cart cart : cartItems) {
+                Integer bookId = cart.getBookId();
+                Integer quantity = cart.getQuantity();
+
+                if (bookId == null || quantity == null || quantity <= 0) {
+                    return Result.fail("购物车数据异常，请刷新后重试");
+                }
+
+                // 查询图书信息
+                Book book = bookMapper.selectById(bookId);
+                if (book == null) {
+                    return Result.fail("图书不存在，ID: " + bookId);
+                }
+
+                // 计算当前项总价
+                BigDecimal itemPrice = cart.getPrice() != null ?
+                        cart.getPrice() : book.getPrice();
+                BigDecimal itemTotal = itemPrice.multiply(BigDecimal.valueOf(quantity));
+
+                totalPrice = totalPrice.add(itemTotal);
+                totalQuantity += quantity;
+
+                // 记录结算项信息
+                Map<String, Object> item = new HashMap<>();
+                item.put("bookId", bookId);
+                item.put("bookName", book.getName());
+                item.put("author", book.getAuthor());
+                item.put("quantity", quantity);
+                item.put("price", itemPrice);
+                item.put("total", itemTotal);
+                item.put("imageUrl", book.getImageUrl());
+                checkoutItems.add(item);
+
+                System.out.println("已结算: " + book.getName() + " × " + quantity +
+                        " = ¥" + itemTotal);
+            }
+
+            // 4. 清空购物车（删除该用户的所有购物车项）
+            QueryWrapper<Cart> deleteWrapper = new QueryWrapper<>();
+            deleteWrapper.eq("user_id", userId);
+            int deleted = this.remove(deleteWrapper) ? 1 : 0;
+
+            if (deleted <= 0) {
+                throw new RuntimeException("清空购物车失败");
+            }
+
+            System.out.println("用户 " + userId + " 的购物车已清空，删除了 " + cartItems.size() + " 条记录");
+
+            // 5. 准备返回结果
+            Map<String, Object> resultData = new HashMap<>();
+            resultData.put("checkoutItems", checkoutItems);
+            resultData.put("totalQuantity", totalQuantity);
+            resultData.put("totalPrice", totalPrice);
+            resultData.put("itemCount", checkoutItems.size());
+            resultData.put("timestamp", new Date());
+
+            return Result.suc("结算成功！共结算 " + totalQuantity + " 件商品，总计 ¥" + totalPrice, resultData);
+
+        } catch (Exception e) {
+            System.err.println("结算失败: " + e.getMessage());
+            e.printStackTrace();
+            return Result.fail("结算失败: " + e.getMessage());
+        }
+    }
 
 }
-

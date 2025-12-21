@@ -73,16 +73,6 @@
           </div>
         </div>
 
-        <!-- 订单记录 -->
-        <div v-else-if="activeMenu === 'orders'" class="orders-section">
-          <h2>订单记录</h2>
-          <div class="empty-orders">
-            <div class="empty-icon">📦</div>
-            <p>暂无订单记录</p>
-            <button @click="goToBookList" class="browse-btn">去逛逛</button>
-          </div>
-        </div>
-
         <!-- 购物车 -->
         <div v-else-if="activeMenu === 'cart'" class="cart-section">
           <h2>购物车概览</h2>
@@ -170,7 +160,6 @@ export default {
       },
       menuItems: [
         { id: 'info', text: '基本信息', icon: '📋' },
-        { id: 'orders', text: '订单记录', icon: '📦' },
         { id: 'cart', text: '购物车', icon: '🛒' },
         { id: 'edit', text: '修改信息', icon: '✏️' }
       ]
@@ -492,20 +481,9 @@ export default {
   color: #333;
 }
 
-.empty-orders, .empty-cart {
+.empty-cart {
   text-align: center;
   padding: 60px 40px;
-}
-
-.empty-icon {
-  font-size: 60px;
-  margin-bottom: 20px;
-  opacity: 0.5;
-}
-
-.empty-orders p, .empty-cart p {
-  color: #666;
-  margin-bottom: 25px;
 }
 
 .cart-overview {

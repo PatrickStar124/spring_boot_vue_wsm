@@ -78,8 +78,12 @@
               <span class="final-price">¥{{ cartStore.cartTotalPrice }}</span>
             </div>
 
-            <button class="checkout-btn" @click="checkout">
-              去结算
+            <button
+                class="checkout-btn"
+                @click="checkout"
+                :disabled="checkoutProcessing || cartStore.cartList.length === 0"
+            >
+              {{ checkoutProcessing ? '结算中...' : `去结算 (¥${cartStore.cartTotalPrice})` }}
             </button>
 
             <div class="secure-checkout">
@@ -132,7 +136,8 @@ export default {
   },
   data() {
     return {
-      clearingAll: false
+      clearingAll: false,
+      checkoutProcessing: false
     }
   },
   created() {
@@ -182,12 +187,91 @@ export default {
         this.clearingAll = false
       }
     },
-    checkout() {
-      if (this.cartStore.cartList.length === 0) {
-        alert('购物车为空')
-        return
+    async checkout() {
+      // 验证用户登录
+      if (!this.userStore.user) {
+        alert('请先登录');
+        this.goToLogin();
+        return;
       }
-      alert('结算功能开发中...')
+
+      // 验证购物车不为空
+      if (this.cartStore.cartList.length === 0) {
+        alert('购物车为空');
+        return;
+      }
+
+      // 检查库存（前端验证）
+      const outOfStockItems = this.cartStore.cartList.filter(item =>
+          item.quantity > (item.stock || 0)
+      );
+
+      if (outOfStockItems.length > 0) {
+        const itemNames = outOfStockItems.map(item =>
+            `• ${item.bookName}（库存：${item.stock}本，需要：${item.quantity}本）`
+        ).join('\n');
+
+        alert(`⚠️ 库存不足，无法结算：\n${itemNames}\n\n请调整数量或移除商品后重试。`);
+        return;
+      }
+
+      // 显示结算详情
+      const checkoutDetails = this.cartStore.cartList.map(item =>
+          `${item.bookName} × ${item.quantity} = ¥${(item.price * item.quantity).toFixed(2)}`
+      ).join('\n');
+
+      const confirmMessage = `💰 确定要结算以下商品吗？\n\n${checkoutDetails}\n\n📦 总计 ${this.cartStore.cartTotalQuantity} 件商品\n💵 应付金额：¥${this.cartStore.cartTotalPrice}`;
+
+      if (!confirm(confirmMessage)) {
+        return;
+      }
+
+      // 禁用结算按钮，显示处理中
+      this.checkoutProcessing = true;
+
+      try {
+        const result = await this.cartStore.checkout(this.userStore.user.id);
+
+        if (result.success) {
+          // 结算成功，显示详细结果
+          let successDetails = '';
+          if (result.data && result.data.checkoutItems) {
+            successDetails = result.data.checkoutItems.map(item =>
+                `${item.bookName} × ${item.quantity} = ¥${item.total}`
+            ).join('\n');
+          } else {
+            successDetails = '成功结算所有商品';
+          }
+
+          const successMessage = `✅ ${result.message}\n\n${successDetails}\n\n📦 已结算 ${result.data?.totalQuantity || this.cartStore.cartTotalQuantity} 件商品\n💵 实付金额：¥${result.data?.totalPrice || this.cartStore.cartTotalPrice}`;
+
+          alert(successMessage);
+
+          // 自动刷新页面数据
+          await this.cartStore.initCartList(this.userStore.user.id);
+        }
+      } catch (error) {
+        console.error('结算失败:', error);
+
+        // 根据错误类型显示不同提示
+        if (error.response && error.response.data) {
+          const errorData = error.response.data;
+          if (errorData.code === 400 || (errorData.msg && errorData.msg.includes('库存'))) {
+            alert(`❌ 结算失败：${errorData.msg}\n\n请调整商品数量后重试。`);
+          } else {
+            alert(`❌ 结算失败：${errorData.msg}`);
+          }
+        } else if (error.message) {
+          alert(`❌ 结算失败：${error.message}`);
+        } else {
+          alert('❌ 网络错误，请稍后重试');
+        }
+
+        // 重新加载购物车数据
+        await this.cartStore.initCartList(this.userStore.user.id);
+      } finally {
+        this.checkoutProcessing = false;
+      }
     },
     goHome() {
       this.$router.push('/')
@@ -311,6 +395,12 @@ export default {
 
 .checkout-btn:hover {
   background: #73d13d;
+}
+
+.checkout-btn:disabled {
+  background: #d9d9d9;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .not-logged-in {
