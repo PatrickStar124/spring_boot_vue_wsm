@@ -1,8 +1,6 @@
-// src/main/java/com/wms/service/impl/BookServiceImpl.java
 package com.wms.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.wms.common.Result;
-import com.wms.controller.CartController;
 import com.wms.entity.Book;
 import com.wms.mapper.BookMapper;
 import com.wms.service.BookService;
@@ -12,7 +10,6 @@ import java.util.List;
 
 @Service
 public class BookServiceImpl extends ServiceImpl<BookMapper, Book> implements BookService {
-
 
     @Override
     public Result getAllBooks() {
@@ -45,9 +42,25 @@ public class BookServiceImpl extends ServiceImpl<BookMapper, Book> implements Bo
                 return Result.fail("价格不能为负数");
             }
 
+            // ============ 关键修改：设置ID为null ============
+            // Oracle使用序列生成ID，需要将ID设为null
+            book.setId(null);
+
+            // 调试信息
+            System.out.println("准备保存的图书：" + book);
+            System.out.println("图书ID：" + book.getId());
+            System.out.println("图片URL：" + book.getImageUrl());
+
             boolean saved = this.save(book);
+
+            // 保存后打印生成的ID
+            if (saved) {
+                System.out.println("保存成功，生成的ID：" + book.getId());
+            }
+
             return saved ? Result.suc("新增成功", book) : Result.fail("新增失败");
         } catch (Exception e) {
+            e.printStackTrace(); // 打印完整堆栈
             return Result.fail("新增失败: " + e.getMessage());
         }
     }

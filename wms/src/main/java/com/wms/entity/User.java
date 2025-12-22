@@ -7,17 +7,15 @@ import lombok.Data;
 import java.io.Serializable;
 
 @Data
-@TableName("user")  // 对应数据库表名1
+@TableName("\"USER\"")  // ！！！重要：Oracle需要双引号！！！
 public class User implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    @TableId(type = IdType.AUTO)
-    private Integer id;        // 主键ID
+    @TableId(type = IdType.INPUT)
+    private Integer id;
 
-    private String no;         // 账号（用户名）
-    private String name;       // 显示名称
-    private String password;   // 密码
-
-    // 可选：保留一个状态字段
-    private String isValid = "Y";  // 是否有效，默认Y
+    private String no;
+    private String name;
+    private String password;
+    private String isValid = "Y";
 }

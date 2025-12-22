@@ -11,7 +11,8 @@ public class MybatisPlusConfig {
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
-        interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
+        // ！！！重要：从 MYSQL 改为 ORACLE ！！！
+        interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.ORACLE));
         return interceptor;
     }
- }
+}

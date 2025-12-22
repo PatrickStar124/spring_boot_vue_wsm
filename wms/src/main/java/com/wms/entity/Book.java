@@ -1,26 +1,26 @@
 package com.wms.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.wms.common.Result;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
+import org.apache.ibatis.type.JdbcType;
 import java.io.Serializable;
 import java.math.BigDecimal;
-
 
 @Data
 @TableName("book")
 public class Book implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    // 关键：为id字段指定JDBC类型
     @TableId(type = IdType.AUTO)
-    private Integer id;             // 图书ID（必须）
+    @TableField(value = "id", jdbcType = JdbcType.NUMERIC)  // 或 JdbcType.INTEGER
+    private Integer id;
 
-    private String name;            // 书名（必须）
-    private String author;          // 作者（必须）
-    private BigDecimal price;       // 价格（必须，购物车计算核心）
-    private Integer stock;          // 库存（必须，防止超卖）
+    private String name;
+    private String author;
+    private BigDecimal price;
+    private Integer stock;
+
+    @TableField(value = "image_url")
     private String imageUrl;
-
 }
