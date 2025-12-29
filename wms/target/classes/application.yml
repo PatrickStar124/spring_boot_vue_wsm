@@ -1,22 +1,22 @@
 server:
   port: 8090
-  address: 0.0.0.0  # 添加这一行！
+  address: 0.0.0.0
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/book?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
+    url: jdbc:oracle:thin:@localhost:1521:XE
+    driver-class-name: oracle.jdbc.OracleDriver
+    username: system
     password: 123456
+
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
 
-# MyBatis-Plus 配置1
+# MyBatis-Plus 配置（修正格式）
 mybatis-plus:
   configuration:
-    map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-  # 注释掉或删除下面这行（因为你没有 XML 文件）
-  # mapper-locations: classpath:mapper/**/*.xml
-  type-aliases-package: com.wms.entity
+    jdbc-type-for-null: 'NULL'
+  global-config:
+    db-config:
+      id-type: AUTO
