@@ -85,17 +85,7 @@
               required
           />
         </div>
-
-        <!-- 描述：保留模板，传参时自动忽略（后端无对应属性） -->
-        <div class="form-item">
-          <label class="form-label">图书描述：</label>
-          <textarea
-              v-model="bookForm.description"
-              class="form-textarea"
-              placeholder="请输入图书简介（选填）"
-              rows="4"
-          ></textarea>
-        </div>
+        
 
         <!-- 提交按钮 -->
         <div class="form-submit">
@@ -132,7 +122,6 @@ export default {
         author: '',
         price: 0,
         stock: 0,
-        description: '',
         image: ''
       },
       imagePreview: '',
@@ -146,33 +135,16 @@ export default {
   methods: {
     loadUser() {
       const userStr = localStorage.getItem('user')
-      if (userStr) {
-        try {
-          this.user = JSON.parse(userStr)
-        } catch (e) {
-          console.error('解析用户信息失败:', e)
-          this.$router.push('/login')
-        }
-      } else {
+      // 去掉 try/catch 检测
+      this.user = JSON.parse(userStr)
+      if (!this.user) {
         this.$router.push('/login')
       }
     },
 
     handleImageUpload(e) {
       const file = e.target.files[0]
-      if (!file) return
-
-      const acceptTypes = ['image/jpeg', 'image/png', 'image/jpg']
-      if (!acceptTypes.includes(file.type)) {
-        alert('仅支持jpg/png格式图片')
-        return
-      }
-
-      if (file.size > 2 * 1024 * 1024) {
-        alert('图片大小不能超过2M')
-        return
-      }
-
+      // 去掉所有文件检测逻辑
       this.file = file
       this.imagePreview = URL.createObjectURL(file)
     },
@@ -181,7 +153,10 @@ export default {
       this.imagePreview = ''
       this.file = null
       this.bookForm.image = ''
-      this.$refs.fileInput.value = ''
+      // 核心修复：增加空值判断，避免给 null 设置 value
+      if (this.$refs.fileInput) {
+        this.$refs.fileInput.value = ''
+      }
     },
 
     resetForm() {
@@ -197,60 +172,39 @@ export default {
     },
 
     async submitBook() {
-      if (!this.bookForm.name || !this.bookForm.author || !this.bookForm.price || !this.bookForm.stock) {
-        alert('请填写必填字段（名称/作者/价格/库存）')
-        return
-      }
-
+      // 去掉表单必填项检测
       this.isSubmitting = true
-      try {
-        let imageUrl = ''
-        if (this.file) {
-          const formData = new FormData()
-          formData.append('file', this.file)
 
-          const uploadRes = await axios.post('http://localhost:8090/file/upload', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-          })
+      // 去掉 try/catch 异常捕获
+      let imageUrl = ''
+      if (this.file) {
+        const formData = new FormData()
+        formData.append('file', this.file)
 
-          if (uploadRes.data.code !== 200) {
-            alert('封面上传失败：' + uploadRes.data.msg)
-            this.isSubmitting = false
-            return
-          }
-          imageUrl = uploadRes.data.data
-          console.log('图片上传成功，地址：', imageUrl)
-        }
-
-        const bookRes = await axios.post('http://localhost:8090/book/save', {
-          name: this.bookForm.name,
-          author: this.bookForm.author,
-          price: this.bookForm.price,
-          stock: this.bookForm.stock,
-          imageUrl: imageUrl
+        // 去掉响应检测，直接访问 data
+        const uploadRes = await axios.post('http://localhost:8090/file/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
         })
-
-        console.log('书籍新增请求返回结果：', bookRes.data)
-        if (bookRes.data.code === 200) {
-          alert('书籍新增成功！')
-          this.resetForm()
-          // 关键修改：带刷新参数跳转，强制更新图书列表
-          this.$router.push({ path: '/booklist', query: { refresh: Date.now() } })
-        } else {
-          alert('新增失败：' + bookRes.data.msg)
-        }
-      } catch (error) {
-        console.error('新增书籍失败详情:', error)
-        if (error.message.includes('Network Error')) {
-          alert('后端服务未启动，请检查后端端口是否为8090')
-        } else if (error.response) {
-          alert('接口请求失败：' + (error.response.data.msg || '未知错误'))
-        } else {
-          alert('操作失败，请稍后重试')
-        }
-      } finally {
-        this.isSubmitting = false
+        imageUrl = uploadRes.data.data
+        console.log('图片上传成功，地址：', imageUrl)
       }
+
+      // 去掉响应检测，直接访问 data
+      const bookRes = await axios.post('http://localhost:8090/book/save', {
+        name: this.bookForm.name,
+        author: this.bookForm.author,
+        price: this.bookForm.price,
+        stock: this.bookForm.stock,
+        imageUrl: imageUrl
+      })
+
+      console.log('书籍新增请求返回结果：', bookRes.data)
+      alert('书籍新增成功！')
+      this.resetForm()
+      this.$router.push({ path: '/booklist', query: { refresh: Date.now() } })
+
+      // 去掉 finally，直接重置状态
+      this.isSubmitting = false
     },
 
     goBack() {

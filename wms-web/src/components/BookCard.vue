@@ -19,7 +19,6 @@
     <div class="book-info">
       <h3 class="book-title">{{ book.name || '未知图书' }}</h3>
       <p class="book-author">作者：{{ book.author || '未知' }}</p>
-      <p class="book-description">{{ book.description || '暂无描述' }}</p>
       <div class="book-footer">
         <span class="book-price">¥{{ book.price ? book.price.toFixed(2) : '0.00' }}</span>
         <span class="book-stock">库存：{{ book.stock !== undefined ? book.stock : '充足' }}</span>

@@ -45,11 +45,6 @@
           还没有账号？<router-link to="/register">立即注册</router-link>
         </div>
 
-        <div class="demo-account" v-if="showDemo">
-          <p>测试账号：</p>
-          <p>账号：admin 密码：123456</p>
-          <p>账号：test 密码：123456</p>
-        </div>
       </form>
     </div>
   </div>

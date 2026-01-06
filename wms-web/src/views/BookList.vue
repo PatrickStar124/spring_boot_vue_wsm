@@ -156,7 +156,7 @@ export default {
               price: book.price || 0,
               stock: book.stock || 0,
               imageUrl: book.imageUrl || book.image || book.img || book.cover || '',
-              description: book.description || '暂无描述'
+
             }
           })
 

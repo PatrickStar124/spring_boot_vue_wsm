@@ -1,212 +1,237 @@
 <template>
-  <div class="home-page">
+  <div class="book-add">
     <header class="header">
-      <h1>📚 图书商城</h1>
+      <h1>📖 新增书籍</h1>
       <div class="header-actions">
-        <button @click="goToBookList" class="booklist-btn">全部图书</button>
-        <button @click="goToCart" class="cart-btn">
-          🛒 购物车
-          <span v-if="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
-        </button>
+        <button @click="goBack" class="back-btn">返回图书列表</button>
         <div class="user-info" v-if="user">
-          <span>欢迎，{{ user.name }}</span>
-          <button @click="goToUserCenter" class="user-btn">个人中心</button>
+          <span>当前登录：{{ user.name }}</span>
           <button @click="logout" class="logout-btn">退出</button>
-        </div>
-        <div class="user-info" v-else>
-          <button @click="goToLogin" class="login-btn">登录</button>
-          <button @click="goToRegister" class="register-btn">注册</button>
         </div>
       </div>
     </header>
 
-    <div class="welcome-section">
-      <h2>欢迎来到图书购物车系统</h2>
-      <p>这里汇集了各类精品图书，点击"全部图书"浏览更多，或将喜欢的图书加入购物车</p>
-    </div>
+    <div class="form-container">
+      <form class="book-form" @submit.prevent="submitBook">
+        <!-- 图书封面上传 -->
+        <div class="form-item">
+          <label class="form-label">图书封面：</label>
+          <div class="upload-container">
+            <div class="preview-img" v-if="imagePreview">
+              <img :src="imagePreview" alt="封面预览" />
+              <button type="button" class="remove-img" @click="clearImage">移除</button>
+            </div>
+            <div class="upload-btn" v-else @click="$refs.fileInput.click()">
+              <input
+                  type="file"
+                  accept="image/*"
+                  ref="fileInput"
+                  @change="handleImageUpload"
+                  style="display: none"
+              />
+              <span>点击上传封面</span>
+            </div>
+            <p class="tips">支持jpg/png格式，建议尺寸200x300</p>
+          </div>
+        </div>
 
-    <div class="featured-books">
-      <h3>🔥 热门推荐</h3>
-      <div v-if="loading" class="loading">加载中...</div>
-      <div v-else-if="books.length === 0" class="empty">
-        <div class="empty-icon">📚</div>
-        <p>暂无推荐图书</p>
-        <button @click="goToBookAdd" v-if="user" class="add-book-btn">添加第一本书</button>
-      </div>
-      <div v-else class="books-grid">
-        <BookCard
-            v-for="book in books.slice(0, 4)"
-            :key="book.id"
-            :book="formatBookData(book)"
-            @cart-updated="handleCartUpdate"
-        />
-      </div>
-    </div>
+        <!-- 书名 -->
+        <div class="form-item">
+          <label class="form-label">图书名称：</label>
+          <input
+              type="text"
+              v-model="bookForm.name"
+              class="form-input"
+              placeholder="请输入图书名称"
+              required
+          />
+        </div>
 
-    <div class="quick-links">
-      <div class="link-card" @click="goToBookList">
-        <div class="link-icon">📖</div>
-        <h4>浏览全部图书</h4>
-        <p>查看所有可用图书</p>
-      </div>
-      <div class="link-card" @click="goToCart">
-        <div class="link-icon">🛒</div>
-        <h4>查看购物车</h4>
-        <p>管理您的购物清单</p>
-      </div>
-      <div class="link-card" @click="user ? goToUserCenter() : goToLogin()">
-        <div class="link-icon">👤</div>
-        <h4>{{ user ? '个人中心' : '用户登录' }}</h4>
-        <p>{{ user ? '查看个人信息' : '登录以使用完整功能' }}</p>
-      </div>
-    </div>
+        <!-- 作者 -->
+        <div class="form-item">
+          <label class="form-label">作者：</label>
+          <input
+              type="text"
+              v-model="bookForm.author"
+              class="form-input"
+              placeholder="请输入作者名称"
+              required
+          />
+        </div>
 
-    <!-- 调试信息 -->
-    <div v-if="showDebug" class="debug-info">
-      <h4>调试信息</h4>
-      <p>用户: {{ user ? user.name : '未登录' }}</p>
-      <p>图书数量: {{ books.length }}</p>
-      <p>购物车数量: {{ cartCount }}</p>
-      <button @click="toggleDebug" class="debug-btn">隐藏调试</button>
+        <!-- 价格 -->
+        <div class="form-item">
+          <label class="form-label">价格（元）：</label>
+          <input
+              type="number"
+              v-model.number="bookForm.price"
+              class="form-input"
+              placeholder="请输入图书价格"
+              min="0.01"
+              step="0.01"
+              required
+          />
+        </div>
+
+        <!-- 库存 -->
+        <div class="form-item">
+          <label class="form-label">库存：</label>
+          <input
+              type="number"
+              v-model.number="bookForm.stock"
+              class="form-input"
+              placeholder="请输入库存数量"
+              min="0"
+              required
+          />
+        </div>
+
+        <!-- 描述 -->
+        <div class="form-item">
+          <label class="form-label">图书描述：</label>
+          <textarea
+              v-model="bookForm.description"
+              class="form-textarea"
+              placeholder="请输入图书简介（选填）"
+              rows="4"
+          ></textarea>
+        </div>
+
+        <!-- 提交按钮 -->
+        <div class="form-submit">
+          <button
+              type="submit"
+              class="submit-btn"
+              :disabled="isSubmitting"
+          >
+            {{ isSubmitting ? '提交中...' : '新增书籍' }}
+          </button>
+          <button
+              type="reset"
+              class="reset-btn"
+              @click="resetForm"
+          >
+            重置表单
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
-import BookCard from '@/components/BookCard.vue'
-import { useCartStore } from '@/store/cart'
-import { useUserStore } from '@/store/user'
-import { storeToRefs } from 'pinia'
 
 export default {
-  name: 'HomePage',
-  components: {
-    BookCard
-  },
-  setup() {
-    const cartStore = useCartStore()
-    const userStore = useUserStore()
-    const { user } = storeToRefs(userStore)
-    const { cartTotalQuantity } = storeToRefs(cartStore)
-
-    return {
-      cartStore,
-      userStore,
-      user,
-      cartTotalQuantity
-    }
-  },
+  name: 'BookAdd',
   data() {
     return {
-      books: [],
-      loading: true,
-      showDebug: false
-    }
-  },
-  computed: {
-    cartCount() {
-      return this.cartTotalQuantity || 0
+      user: null,
+      bookForm: {
+        name: '',
+        author: '',
+        price: 0,
+        stock: 0,
+        description: '',
+        image: ''
+      },
+      imagePreview: '',
+      isSubmitting: false,
+      file: null
     }
   },
   created() {
-    this.fetchBooks()
-    // 如果用户已登录，初始化购物车
-    if (this.user) {
-      this.cartStore.initCartList(this.user.id)
-    }
+    this.loadUser()
   },
   methods: {
-    // 格式化图书数据，确保字段完整
-    formatBookData(book) {
-      if (!book) return {}
-
-      return {
-        id: book.id || 0,
-        name: book.name || book.bookName || '未知图书',
-        author: book.author || '未知作者',
-        price: book.price || 0,
-        stock: book.stock || 0,
-        imageUrl: book.imageUrl || book.image || book.img || book.cover || '',
-        description: book.description || '暂无描述'
+    loadUser() {
+      const userStr = localStorage.getItem('user')
+      // 去掉 try/catch 检测
+      this.user = JSON.parse(userStr)
+      if (!this.user) {
+        this.$router.push('/login')
       }
     },
 
-    async fetchBooks() {
-      this.loading = true
-      console.log('首页开始获取图书列表...')
+    handleImageUpload(e) {
+      const file = e.target.files[0]
+      // 去掉所有文件检测逻辑
+      this.file = file
+      this.imagePreview = URL.createObjectURL(file)
+    },
 
-      try {
-        const response = await axios.get('http://localhost:8090/book/list')
-        console.log('首页获取图书接口返回:', response.data)
+    clearImage() {
+      this.imagePreview = ''
+      this.file = null
+      this.bookForm.image = ''
+      this.$refs.fileInput.value = ''
+    },
 
-        if (response.data.code === 200) {
-          // 处理并格式化图书数据
-          this.books = response.data.data.map(book => this.formatBookData(book))
-          console.log('首页处理后的图书列表:', this.books)
-        } else {
-          console.error('首页获取图书失败:', response.data.msg)
-        }
-      } catch (error) {
-        console.error('首页获取图书失败:', error)
-      } finally {
-        this.loading = false
+    resetForm() {
+      this.bookForm = {
+        name: '',
+        author: '',
+        price: 0,
+        stock: 0,
+        description: '',
+        image: ''
       }
+      this.clearImage()
     },
 
-    handleCartUpdate() {
-      console.log('购物车已更新')
+    async submitBook() {
+      // 去掉表单必填项检测
+      this.isSubmitting = true
+
+      // 去掉 try/catch 异常捕获
+      let imageUrl = ''
+      if (this.file) {
+        const formData = new FormData()
+        formData.append('file', this.file)
+
+        // 去掉响应检测，直接访问 data
+        const uploadRes = await axios.post('http://localhost:8090/file/upload', formData, {
+          headers: {'Content-Type': 'multipart/form-data'}
+        })
+        imageUrl = uploadRes.data.data
+        console.log('图片上传成功，地址：', imageUrl)
+      }
+
+      // 去掉响应检测，直接访问 data
+      const bookRes = await axios.post('http://localhost:8090/book/save', {
+        name: this.bookForm.name,
+        author: this.bookForm.author,
+        price: this.bookForm.price,
+        stock: this.bookForm.stock,
+        imageUrl: imageUrl
+      })
+
+      console.log('书籍新增请求返回结果：', bookRes.data)
+      alert('书籍新增成功！')
+      this.resetForm()
+      this.$router.push({path: '/booklist', query: {refresh: Date.now()}})
+
+      // 去掉 finally，直接重置状态
+      this.isSubmitting = false
     },
 
-    goToBookList() {
+    goBack() {
       this.$router.push('/booklist')
     },
 
-    goToCart() {
-      if (!this.user) {
-        alert('请先登录')
-        this.$router.push('/login')
-        return
-      }
-      this.$router.push('/cart')
-    },
-
-    goToLogin() {
-      this.$router.push('/login')
-    },
-
-    goToRegister() {
-      this.$router.push('/register')
-    },
-
-    goToUserCenter() {
-      this.$router.push('/usercenter')
-    },
-
-    goToBookAdd() {
-      this.$router.push('/bookadd')
-    },
-
     logout() {
-      if (confirm('确定要退出登录吗？')) {
-        this.userStore.clearUser()
-        this.cartStore.clearCart()
-        localStorage.removeItem('user')
-        alert('已退出登录')
-        this.$router.push('/')
-      }
-    },
-
-    toggleDebug() {
-      this.showDebug = !this.showDebug
+      localStorage.removeItem('user')
+      this.user = null
+      this.$router.push('/login')
     }
   }
 }
 </script>
 
 <style scoped>
-.home-page {
-  max-width: 1200px;
+/* 样式部分完全不变 */
+.book-add {
+  max-width: 800px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -219,236 +244,159 @@ export default {
   padding: 20px;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .header-actions {
   display: flex;
-  gap: 10px;
+  gap: 15px;
   align-items: center;
-  position: relative;
 }
 
-.user-info {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-left: 10px;
-}
-
-.booklist-btn, .cart-btn, .login-btn, .register-btn, .logout-btn, .user-btn {
+.back-btn {
   padding: 8px 16px;
+  background: #1890ff;
+  color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-}
-
-.booklist-btn {
-  background: #1890ff;
-  color: white;
-}
-
-.booklist-btn:hover {
-  background: #40a9ff;
-}
-
-.cart-btn {
-  background: #faad14;
-  color: white;
-  position: relative;
-}
-
-.cart-btn:hover {
-  background: #ffc53d;
-}
-
-.cart-badge {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background: #ff4d4f;
-  color: white;
-  font-size: 12px;
-  min-width: 18px;
-  height: 18px;
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 4px;
-}
-
-.login-btn {
-  background: #52c41a;
-  color: white;
-}
-
-.login-btn:hover {
-  background: #73d13d;
-}
-
-.register-btn {
-  background: #722ed1;
-  color: white;
-}
-
-.register-btn:hover {
-  background: #9254de;
 }
 
 .logout-btn {
+  padding: 8px 16px;
   background: #f5222d;
   color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
-.logout-btn:hover {
-  background: #ff4d4f;
-}
-
-.user-btn {
-  background: #13c2c2;
-  color: white;
-}
-
-.user-btn:hover {
-  background: #36cfc9;
-}
-
-.welcome-section {
-  text-align: center;
-  padding: 40px;
-  margin-bottom: 30px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 8px;
-}
-
-.welcome-section h2 {
-  font-size: 28px;
-  margin-bottom: 10px;
-}
-
-.welcome-section p {
-  font-size: 16px;
-  opacity: 0.9;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.featured-books {
-  margin-bottom: 40px;
-  padding: 20px;
+.form-container {
   background: white;
+  padding: 30px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.featured-books h3 {
-  font-size: 20px;
-  margin-bottom: 20px;
-  color: #333;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.books-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+.book-form {
+  display: flex;
+  flex-direction: column;
   gap: 20px;
 }
 
-.loading, .empty {
-  text-align: center;
-  padding: 50px;
-  font-size: 18px;
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.form-input, .form-textarea {
+  padding: 10px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-textarea {
+  resize: vertical;
+}
+
+.upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.preview-img {
+  position: relative;
+  width: 200px;
+  height: 300px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.preview-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remove-img {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #ff4d4f;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.upload-btn {
+  width: 200px;
+  height: 300px;
+  border: 1px dashed #d9d9d9;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upload-btn:hover {
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+.upload-btn input {
+  display: none !important;
+}
+
+.tips {
+  font-size: 12px;
   color: #999;
+  margin: 0;
 }
 
-.empty-icon {
-  font-size: 40px;
-  margin-bottom: 15px;
-  opacity: 0.5;
+.form-submit {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 20px;
 }
 
-.add-book-btn {
-  padding: 8px 16px;
+.submit-btn {
+  padding: 10px 30px;
   background: #52c41a;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  margin-top: 15px;
+  font-size: 16px;
 }
 
-.quick-links {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-top: 30px;
+.submit-btn:disabled {
+  background: #d9d9d9;
+  cursor: not-allowed;
 }
 
-.link-card {
-  padding: 25px;
-  background: white;
-  border-radius: 8px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.link-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-  border-color: #1890ff;
-}
-
-.link-icon {
-  font-size: 40px;
-  margin-bottom: 15px;
-}
-
-.link-card h4 {
-  font-size: 18px;
-  margin-bottom: 8px;
-  color: #333;
-}
-
-.link-card p {
-  font-size: 14px;
+.reset-btn {
+  padding: 10px 30px;
+  background: #f5f5f5;
   color: #666;
-  line-height: 1.5;
-}
-
-/* 调试信息 */
-.debug-info {
-  margin-top: 30px;
-  padding: 15px;
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 14px;
-}
-
-.debug-info h4 {
-  margin: 0 0 10px 0;
-  color: #495057;
-}
-
-.debug-btn {
-  padding: 6px 12px;
-  background: #6c757d;
-  color: white;
-  border: none;
+  border: 1px solid #d9d9d9;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 12px;
-  margin-top: 10px;
+  font-size: 16px;
 }
 </style>
