@@ -85,7 +85,17 @@
               required
           />
         </div>
-        
+
+        <!-- 描述 -->
+        <div class="form-item">
+          <label class="form-label">图书描述：</label>
+          <textarea
+              v-model="bookForm.description"
+              class="form-textarea"
+              placeholder="请输入图书简介（选填）"
+              rows="4"
+          ></textarea>
+        </div>
 
         <!-- 提交按钮 -->
         <div class="form-submit">
@@ -122,6 +132,7 @@ export default {
         author: '',
         price: 0,
         stock: 0,
+        description: '',
         image: ''
       },
       imagePreview: '',
